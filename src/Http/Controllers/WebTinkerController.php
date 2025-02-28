@@ -23,4 +23,29 @@ class WebTinkerController
 
         return $tinker->execute($validated['code']);
     }
+
+    public function getSuggestions()
+    {
+        // Get all loaded classes
+        $classes = get_declared_classes();
+        $suggestions = [];
+
+        foreach ($classes as $class) {
+            if (strpos($class, 'App\\') === 0 || strpos($class, 'Illuminate\\') === 0) {
+                $suggestions[] = $class;
+
+                // Add public methods
+                $methods = get_class_methods($class);
+                if ($methods) {
+                    foreach ($methods as $method) {
+                        $suggestions[] = "$class::$method()";
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'suggestions' => array_unique($suggestions)
+        ]);
+    }
 }

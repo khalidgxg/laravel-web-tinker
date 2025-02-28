@@ -58,9 +58,13 @@ class WebTinkerServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        Route::group($this->routeConfiguration(), function () {
+        Route::group([
+            'prefix' => config('web-tinker.path'),
+            'middleware' => config('web-tinker.middleware'),
+        ], function () {
             Route::get('/', [WebTinkerController::class, 'index']);
             Route::post('/', [WebTinkerController::class, 'execute']);
+            Route::get('/suggestions', [WebTinkerController::class, 'getSuggestions']);
         });
 
         return $this;
