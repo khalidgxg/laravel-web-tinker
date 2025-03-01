@@ -6,7 +6,6 @@
 import 'codemirror/mode/php/php';
 import 'codemirror/addon/hint/show-hint';
 import 'codemirror/addon/hint/anyword-hint';
-import 'codemirror/addon/hint/php-hint';
 import 'codemirror/addon/hint/show-hint.css';
 
 import CodeMirror from 'codemirror';
@@ -21,11 +20,14 @@ export default {
             'orderBy(', 'groupBy(', 'get()', 'first()', 'find(',
             'create(', 'update(', 'delete()', 'with(', 'has(',
             'whereHas(', 'whereIn(', 'whereBetween(', 'whereNull(',
-            'whereNotNull(', 'count()', 'sum(', 'avg(', 'max(', 'min('
+            'whereNotNull(', 'count()', 'sum(', 'avg(', 'max(', 'min(',
+            // Add more Laravel specific methods
+            'Auth::', 'Cache::', 'Config::', 'Route::', 'Session::',
+            'Storage::', 'Hash::', 'Validator::', 'Event::', 'Log::'
         ]
     }),
 
-    props: ['path'],ّ
+    props: ['path'],
 
     mounted() {
         const config = {
@@ -37,7 +39,9 @@ export default {
                 'Ctrl-Enter': () => {
                     this.executeCode();
                 },
-                'Ctrl-Space': 'autocomplete',
+                'Ctrl-Space': (cm) => {
+                    this.showHints(cm);
+                },
                 'Tab': (cm) => {
                     if (cm.somethingSelected()) {
                         cm.indentSelection('add');
@@ -51,11 +55,7 @@ export default {
             lineWrapping: true,
             mode: 'text/x-php',
             tabSize: 4,
-            theme: 'tinker',
-            hintOptions: {
-                completeSingle: false,
-                hint: this.getHints
-            }
+            theme: 'tinker'
         };
 
         this.codeEditor = CodeMirror.fromTextArea(this.$refs.codeEditor, config);
@@ -68,7 +68,7 @@ export default {
         this.codeEditor.on('keyup', (editor, event) => {
             if (!editor.state.completionActive &&
                 /[a-zA-Z$_:>]/.test(String.fromCharCode(event.keyCode))) {
-                CodeMirror.commands.autocomplete(editor);
+                this.showHints(editor);
             }
         });
 
@@ -94,7 +94,7 @@ export default {
             });
         },
 
-        getHints(editor) {
+        showHints(editor) {
             const cursor = editor.getCursor();
             const token = editor.getTokenAt(cursor);
             const line = editor.getLine(cursor.line);
@@ -106,11 +106,14 @@ export default {
                 item.toLowerCase().includes(currentWord)
             );
 
-            return {
-                list: list,
-                from: CodeMirror.Pos(cursor.line, start),
-                to: CodeMirror.Pos(cursor.line, end)
-            };
+            editor.showHint({
+                completeSingle: false,
+                hint: () => ({
+                    list: list,
+                    from: CodeMirror.Pos(cursor.line, start),
+                    to: CodeMirror.Pos(cursor.line, end)
+                })
+            });
         },
 
         autoShowHints(editor) {
@@ -118,7 +121,7 @@ export default {
             const token = editor.getTokenAt(cursor);
 
             if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
-                CodeMirror.commands.autocomplete(editor);
+                this.showHints(editor);
             }
         },
 
@@ -130,7 +133,7 @@ export default {
             const token = cm.getTokenAt(cursor);
 
             if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
-                cm.showHint();
+                this.showHints(cm);
             } else {
                 cm.replaceSelection('    ');
             }
