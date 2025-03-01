@@ -89,7 +89,21 @@ export default {
         phpClasses: [],
         importedClasses: new Set(),
         lastImportLine: 0,
-        isLoadingClasses: false
+        isLoadingClasses: false,
+        suggestions: [
+            { text: 'map', displayText: 'map - تحويل عناصر المجموعة', snippet: 'map(function ($item) {\n    return $item;\n})' },
+            { text: 'each', displayText: 'each - تنفيذ دالة على كل عنصر', snippet: 'each(function ($item) {\n    //\n})' },
+            { text: 'filter', displayText: 'filter - تصفية العناصر', snippet: 'filter(function ($item) {\n    return true;\n})' },
+            { text: 'reduce', displayText: 'reduce - تقليص المجموعة إلى قيمة واحدة', snippet: 'reduce(function ($carry, $item) {\n    return $carry + $item;\n})' },
+            { text: 'reject', displayText: 'reject - استبعاد العناصر', snippet: 'reject(function ($item) {\n    return false;\n})' },
+            { text: 'every', displayText: 'every - التحقق من جميع العناصر', snippet: 'every(function ($item) {\n    return true;\n})' },
+            { text: 'some', displayText: 'some - التحقق من بعض العناصر', snippet: 'some(function ($item) {\n    return true;\n})' },
+            { text: 'sort', displayText: 'sort - ترتيب العناصر', snippet: 'sort(function ($a, $b) {\n    return $a <=> $b;\n})' },
+            { text: 'sortBy', displayText: 'sortBy - ترتيب حسب مفتاح', snippet: 'sortBy(\'id\')' },
+            { text: 'sortByDesc', displayText: 'sortByDesc - ترتيب تنازلي حسب مفتاح', snippet: 'sortByDesc(\'id\')' },
+            { text: 'groupBy', displayText: 'groupBy - تجميع حسب مفتاح', snippet: 'groupBy(\'id\')' },
+            { text: 'partition', displayText: 'partition - تقسيم المجموعة', snippet: 'partition(function ($item) {\n    return $item > 10;\n})' },
+        ]
     }),
 
     props: ['path'],
@@ -752,6 +766,9 @@ export default {
             // تعبير منتظم للبحث عن استخدامات الفئات مع ::
             const staticUsageRegex = /\b([A-Z][a-zA-Z0-9_]*)::/g;
 
+            // تعبير منتظم للبحث عن استخدامات التعدادات
+            const enumUsageRegex = /\b([A-Z][a-zA-Z0-9_]*)(StatusEnum|Enum|Type)\b::/g;
+
             // الحصول على جميع أسماء الفئات المحتملة
             let matches = [];
 
@@ -764,6 +781,16 @@ export default {
             while ((staticMatch = staticUsageRegex.exec(code)) !== null) {
                 if (staticMatch[1]) {
                     matches.push(staticMatch[1]);
+                }
+            }
+
+            // البحث عن التعدادات المستخدمة
+            let enumMatch;
+            while ((enumMatch = enumUsageRegex.exec(code)) !== null) {
+                if (enumMatch[0]) {
+                    // استخراج اسم التعداد الكامل
+                    const fullEnumName = enumMatch[0].replace('::', '');
+                    matches.push(fullEnumName);
                 }
             }
 
@@ -810,7 +837,6 @@ export default {
                 { name: 'Job', namespace: 'Illuminate\\Bus\\Queueable' },
                 { name: 'Mailable', namespace: 'Illuminate\\Mail\\Mailable' },
                 { name: 'Notifiable', namespace: 'Illuminate\\Notifications\\Notifiable' },
-                { name: 'Enum', namespace: 'App\\Enums\\' },
                 { name: 'ShouldQueue', namespace: 'Illuminate\\Contracts\\Queue\\ShouldQueue' },
                 { name: 'Dispatchable', namespace: 'Illuminate\\Foundation\\Bus\\Dispatchable' },
                 { name: 'InteractsWithQueue', namespace: 'Illuminate\\Queue\\InteractsWithQueue' },
@@ -821,6 +847,19 @@ export default {
             uniqueClassNames.forEach(className => {
                 // تجاهل الكلمات المحجوزة في PHP
                 if (['Class', 'Interface', 'Trait', 'Function', 'Array', 'String', 'Int', 'Float', 'Bool', 'True', 'False', 'Null', 'Self', 'Parent', 'Static', 'Public', 'Private', 'Protected', 'Final', 'Abstract', 'Extends', 'Implements'].includes(className)) {
+                    return;
+                }
+
+                // التعامل مع التعدادات بشكل خاص
+                if (className.endsWith('Enum') || className.endsWith('StatusEnum') || className.endsWith('Type')) {
+                    console.log('Found potential enum:', className);
+                    const enumInfo = { name: className, namespace: `App\\Enums\\${className}` };
+
+                    // التحقق مما إذا كانت التعداد مستورد بالفعل
+                    if (!this.hasImportForClass(editor, enumInfo)) {
+                        // استيراد التعداد
+                        this.addImport(editor, enumInfo);
+                    }
                     return;
                 }
 
@@ -877,7 +916,9 @@ export default {
                 { suffix: 'Controller', namespace: `App\\Http\\Controllers\\${className}` },
                 { suffix: 'Middleware', namespace: `App\\Http\\Middleware\\${className}` },
                 { suffix: 'Provider', namespace: `App\\Providers\\${className}` },
-                { suffix: 'Enum', namespace: `App\\Enums\\${className}` }
+                { suffix: 'Enum', namespace: `App\\Enums\\${className}` },
+                { suffix: 'StatusEnum', namespace: `App\\Enums\\${className}` },
+                { suffix: 'Type', namespace: `App\\Enums\\${className}` }
             ];
 
             // التحقق مما إذا كان اسم الفئة ينتهي بأحد اللواحق المعروفة
@@ -962,9 +1003,17 @@ export default {
             }
 
             // البحث عن استخدام التعدادات (Enums)
-            if (code.includes('enum ') || code.includes('->value') || code.includes('::cases()')) {
-                // لا نستطيع استيراد تعداد محدد هنا لأننا لا نعرف اسمه، ولكن يمكننا إضافة تعليق مفيد
-                console.log('Enum usage detected. Consider importing specific enum classes.');
+            const enumRegex = /\b([A-Z][a-zA-Z0-9_]*)(StatusEnum|Enum|Type)::/g;
+            let enumMatch;
+            while ((enumMatch = enumRegex.exec(code)) !== null) {
+                if (enumMatch[0]) {
+                    const enumName = enumMatch[0].replace('::', '');
+                    console.log('Found enum usage:', enumName);
+                    const enumInfo = { name: enumName, namespace: `App\\Enums\\${enumName}` };
+                    if (!this.hasImportForClass(editor, enumInfo)) {
+                        this.addImport(editor, enumInfo);
+                    }
+                }
             }
         },
 

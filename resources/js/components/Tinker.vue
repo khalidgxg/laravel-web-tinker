@@ -3,15 +3,43 @@
         <div class="tinker__status" v-if="isLoading">
             <span class="tinker__status-text">Loading classes...</span>
         </div>
-        <div class="split-view" :style="gridStyle">
-            <TinkerInput
+        <div class="tinker__shortcuts">
+            <div class="shortcuts-toggle" @click="toggleShortcuts">
+                <i class="shortcuts-icon">⌨️</i> الاختصارات
+            </div>
+            <div class="shortcuts-panel" v-if="showShortcuts">
+                <div class="shortcuts-header">
+                    <h3>اختصارات لوحة المفاتيح</h3>
+                    <span class="shortcuts-close" @click="toggleShortcuts">×</span>
+                </div>
+                <div class="shortcuts-content">
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl+Enter / Cmd+Enter</span>
+                        <span class="shortcut-desc">تنفيذ الكود</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl+Space</span>
+                        <span class="shortcut-desc">إظهار الاقتراحات</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Tab</span>
+                        <span class="shortcut-desc">إكمال الكود أو إضافة مسافات</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Alt+I</span>
+                        <span class="shortcut-desc">استيراد الفئة الحالية</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tinker__container">
+            <tinker-input
                 :path="path"
-                @execute="executeCode"
-                ref="tinkerInput"
+                @execute="execute"
                 @loading-status="updateLoadingStatus"
+                ref="tinkerInput"
             />
-            <div class="gutter" ref="gutter"></div>
-            <div class="output" v-html="output"></div>
+            <tinker-output :output="output" />
         </div>
     </div>
 </template>
@@ -37,7 +65,8 @@ export default {
         breakpoint: 768,
         input: '',
         output: '<span class="text-dimmed">// Use cmd+enter or ctrl+enter to run.</span>',
-        isLoading: false
+        isLoading: false,
+        showShortcuts: false
     }),
 
     computed: {
@@ -62,7 +91,7 @@ export default {
     },
 
     methods: {
-        executeCode(output) {
+        execute(output) {
             this.output = DOMPurify.sanitize(output);
         },
 
@@ -89,6 +118,10 @@ export default {
                 this.split.destroy();
             }
         },
+
+        toggleShortcuts() {
+            this.showShortcuts = !this.showShortcuts;
+        }
     },
 
     mounted() {
@@ -208,5 +241,130 @@ export default {
 
 .error {
     color: #f56565;
+}
+
+.tinker {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+.tinker__container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.tinker__status {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #2c3e50;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    z-index: 100;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    border-bottom: 1px solid #34495e;
+}
+
+.tinker__shortcuts {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.shortcuts-toggle {
+    background-color: #34495e;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+}
+
+.shortcuts-toggle:hover {
+    background-color: #2c3e50;
+}
+
+.shortcuts-icon {
+    margin-right: 5px;
+    font-style: normal;
+}
+
+.shortcuts-panel {
+    position: absolute;
+    top: 35px;
+    right: 0;
+    width: 350px;
+    background-color: #2c3e50;
+    border-radius: 5px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    color: white;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    overflow: hidden;
+}
+
+.shortcuts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #34495e;
+    border-bottom: 1px solid #3d566e;
+}
+
+.shortcuts-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.shortcuts-close {
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.shortcuts-content {
+    padding: 10px 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.shortcut-key {
+    background-color: #34495e;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.shortcut-desc {
+    color: #ecf0f1;
+}
+
+@media (max-width: 768px) {
+    .tinker__container {
+        flex-direction: column;
+    }
+
+    .shortcuts-panel {
+        width: 280px;
+    }
 }
 </style>

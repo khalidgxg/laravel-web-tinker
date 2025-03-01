@@ -147,7 +147,7 @@ class WebTinkerController
             $this->scanDirectory(app_path('Providers'), 'App\\Providers', $classes, $count);
 
             // إضافة معلومات التصحيح
-            \Log::info('Found ' . $count . ' classes');
+            app('log')->info('Found ' . $count . ' classes');
 
             return response()->json([
                 'classes' => $classes,
@@ -155,8 +155,8 @@ class WebTinkerController
                 'app_path' => app_path()
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error in getAvailableClasses: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            app('log')->error('Error in getAvailableClasses: ' . $e->getMessage());
+            app('log')->error($e->getTraceAsString());
 
             return response()->json([
                 'error' => $e->getMessage(),
@@ -177,7 +177,7 @@ class WebTinkerController
     private function scanDirectory($directory, $namespace, &$classes, &$count)
     {
         if (!file_exists($directory)) {
-            \Log::info("Directory does not exist: {$directory}");
+            app('log')->info("Directory does not exist: {$directory}");
             return;
         }
 

@@ -1847,6 +1847,34 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -1869,7 +1897,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             breakpoint: 768,
             input: '',
             output: '<span class="text-dimmed">// Use cmd+enter or ctrl+enter to run.</span>',
-            isLoading: false
+            isLoading: false,
+            showShortcuts: false
         };
     },
 
@@ -1892,7 +1921,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
 
     methods: {
-        executeCode: function executeCode(output) {
+        execute: function execute(output) {
             this.output = __WEBPACK_IMPORTED_MODULE_3_dompurify___default.a.sanitize(output);
         },
         updateLoadingStatus: function updateLoadingStatus(status) {
@@ -1913,6 +1942,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             if (this.split) {
                 this.split.destroy();
             }
+        },
+        toggleShortcuts: function toggleShortcuts() {
+            this.showShortcuts = !this.showShortcuts;
         }
     },
 
@@ -2007,7 +2039,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             phpClasses: [],
             importedClasses: new Set(),
             lastImportLine: 0,
-            isLoadingClasses: false
+            isLoadingClasses: false,
+            suggestions: [{ text: 'map', displayText: 'map - تحويل عناصر المجموعة', snippet: 'map(function ($item) {\n    return $item;\n})' }, { text: 'each', displayText: 'each - تنفيذ دالة على كل عنصر', snippet: 'each(function ($item) {\n    //\n})' }, { text: 'filter', displayText: 'filter - تصفية العناصر', snippet: 'filter(function ($item) {\n    return true;\n})' }, { text: 'reduce', displayText: 'reduce - تقليص المجموعة إلى قيمة واحدة', snippet: 'reduce(function ($carry, $item) {\n    return $carry + $item;\n})' }, { text: 'reject', displayText: 'reject - استبعاد العناصر', snippet: 'reject(function ($item) {\n    return false;\n})' }, { text: 'every', displayText: 'every - التحقق من جميع العناصر', snippet: 'every(function ($item) {\n    return true;\n})' }, { text: 'some', displayText: 'some - التحقق من بعض العناصر', snippet: 'some(function ($item) {\n    return true;\n})' }, { text: 'sort', displayText: 'sort - ترتيب العناصر', snippet: 'sort(function ($a, $b) {\n    return $a <=> $b;\n})' }, { text: 'sortBy', displayText: 'sortBy - ترتيب حسب مفتاح', snippet: 'sortBy(\'id\')' }, { text: 'sortByDesc', displayText: 'sortByDesc - ترتيب تنازلي حسب مفتاح', snippet: 'sortByDesc(\'id\')' }, { text: 'groupBy', displayText: 'groupBy - تجميع حسب مفتاح', snippet: 'groupBy(\'id\')' }, { text: 'partition', displayText: 'partition - تقسيم المجموعة', snippet: 'partition(function ($item) {\n    return $item > 10;\n})' }]
         };
     },
 
@@ -2455,6 +2488,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             // تعبير منتظم للبحث عن استخدامات الفئات مع ::
             var staticUsageRegex = /\b([A-Z][a-zA-Z0-9_]*)::/g;
 
+            // تعبير منتظم للبحث عن استخدامات التعدادات
+            var enumUsageRegex = /\b([A-Z][a-zA-Z0-9_]*)(StatusEnum|Enum|Type)\b::/g;
+
             // الحصول على جميع أسماء الفئات المحتملة
             var matches = [];
 
@@ -2470,6 +2506,16 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
             }
 
+            // البحث عن التعدادات المستخدمة
+            var enumMatch = void 0;
+            while ((enumMatch = enumUsageRegex.exec(code)) !== null) {
+                if (enumMatch[0]) {
+                    // استخراج اسم التعداد الكامل
+                    var fullEnumName = enumMatch[0].replace('::', '');
+                    matches.push(fullEnumName);
+                }
+            }
+
             // إزالة التكرارات
             var uniqueClassNames = [].concat(_toConsumableArray(new Set(matches)));
 
@@ -2478,12 +2524,25 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             // قائمة بالفئات المعروفة التي نريد استيرادها دائمًا إذا وجدت في الكود
             var knownClasses = [{ name: 'User', namespace: 'App\\Models\\User' }, { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' }, { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' }, { name: 'Route', namespace: 'Illuminate\\Support\\Facades\\Route' }, { name: 'Storage', namespace: 'Illuminate\\Support\\Facades\\Storage' }, { name: 'Hash', namespace: 'Illuminate\\Support\\Facades\\Hash' }, { name: 'Cache', namespace: 'Illuminate\\Support\\Facades\\Cache' }, { name: 'Session', namespace: 'Illuminate\\Support\\Facades\\Session' }, { name: 'Validator', namespace: 'Illuminate\\Support\\Facades\\Validator' }, { name: 'Carbon', namespace: 'Carbon\\Carbon' }, { name: 'Str', namespace: 'Illuminate\\Support\\Str' }, { name: 'Arr', namespace: 'Illuminate\\Support\\Arr' }, { name: 'Log', namespace: 'Illuminate\\Support\\Facades\\Log' }, { name: 'File', namespace: 'Illuminate\\Support\\Facades\\File' }, { name: 'Event', namespace: 'Illuminate\\Support\\Facades\\Event' }, { name: 'Mail', namespace: 'Illuminate\\Support\\Facades\\Mail' }, { name: 'Notification', namespace: 'Illuminate\\Support\\Facades\\Notification' }, { name: 'Queue', namespace: 'Illuminate\\Support\\Facades\\Queue' }, { name: 'Schema', namespace: 'Illuminate\\Support\\Facades\\Schema' }, { name: 'URL', namespace: 'Illuminate\\Support\\Facades\\URL' }, { name: 'Artisan', namespace: 'Illuminate\\Support\\Facades\\Artisan' }, { name: 'Blade', namespace: 'Illuminate\\Support\\Facades\\Blade' }, { name: 'Config', namespace: 'Illuminate\\Support\\Facades\\Config' }, { name: 'Cookie', namespace: 'Illuminate\\Support\\Facades\\Cookie' }, { name: 'Crypt', namespace: 'Illuminate\\Support\\Facades\\Crypt' }, { name: 'Date', namespace: 'Illuminate\\Support\\Facades\\Date' }, { name: 'Http', namespace: 'Illuminate\\Support\\Facades\\Http' }, { name: 'Password', namespace: 'Illuminate\\Support\\Facades\\Password' }, { name: 'Redirect', namespace: 'Illuminate\\Support\\Facades\\Redirect' }, { name: 'Request', namespace: 'Illuminate\\Http\\Request' }, { name: 'Response', namespace: 'Illuminate\\Http\\Response' }, { name: 'Collection', namespace: 'Illuminate\\Support\\Collection' },
             // إضافة فئات Laravel الشائعة الأخرى
-            { name: 'Job', namespace: 'Illuminate\\Bus\\Queueable' }, { name: 'Mailable', namespace: 'Illuminate\\Mail\\Mailable' }, { name: 'Notifiable', namespace: 'Illuminate\\Notifications\\Notifiable' }, { name: 'Enum', namespace: 'App\\Enums\\' }, { name: 'ShouldQueue', namespace: 'Illuminate\\Contracts\\Queue\\ShouldQueue' }, { name: 'Dispatchable', namespace: 'Illuminate\\Foundation\\Bus\\Dispatchable' }, { name: 'InteractsWithQueue', namespace: 'Illuminate\\Queue\\InteractsWithQueue' }, { name: 'SerializesModels', namespace: 'Illuminate\\Queue\\SerializesModels' }];
+            { name: 'Job', namespace: 'Illuminate\\Bus\\Queueable' }, { name: 'Mailable', namespace: 'Illuminate\\Mail\\Mailable' }, { name: 'Notifiable', namespace: 'Illuminate\\Notifications\\Notifiable' }, { name: 'ShouldQueue', namespace: 'Illuminate\\Contracts\\Queue\\ShouldQueue' }, { name: 'Dispatchable', namespace: 'Illuminate\\Foundation\\Bus\\Dispatchable' }, { name: 'InteractsWithQueue', namespace: 'Illuminate\\Queue\\InteractsWithQueue' }, { name: 'SerializesModels', namespace: 'Illuminate\\Queue\\SerializesModels' }];
 
             // التحقق من كل اسم فئة محتمل
             uniqueClassNames.forEach(function (className) {
                 // تجاهل الكلمات المحجوزة في PHP
                 if (['Class', 'Interface', 'Trait', 'Function', 'Array', 'String', 'Int', 'Float', 'Bool', 'True', 'False', 'Null', 'Self', 'Parent', 'Static', 'Public', 'Private', 'Protected', 'Final', 'Abstract', 'Extends', 'Implements'].includes(className)) {
+                    return;
+                }
+
+                // التعامل مع التعدادات بشكل خاص
+                if (className.endsWith('Enum') || className.endsWith('StatusEnum') || className.endsWith('Type')) {
+                    console.log('Found potential enum:', className);
+                    var enumInfo = { name: className, namespace: 'App\\Enums\\' + className };
+
+                    // التحقق مما إذا كانت التعداد مستورد بالفعل
+                    if (!_this5.hasImportForClass(editor, enumInfo)) {
+                        // استيراد التعداد
+                        _this5.addImport(editor, enumInfo);
+                    }
                     return;
                 }
 
@@ -2529,7 +2588,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         // دالة جديدة لتخمين مساحة الاسم بناءً على اسم الفئة
         guessAndImportNamespace: function guessAndImportNamespace(editor, className) {
             // قائمة بالمسارات المحتملة للفئات في Laravel
-            var possiblePaths = [{ suffix: 'Job', namespace: 'App\\Jobs\\' + className }, { suffix: 'Notification', namespace: 'App\\Notifications\\' + className }, { suffix: 'Mail', namespace: 'App\\Mail\\' + className }, { suffix: 'Event', namespace: 'App\\Events\\' + className }, { suffix: 'Listener', namespace: 'App\\Listeners\\' + className }, { suffix: 'Policy', namespace: 'App\\Policies\\' + className }, { suffix: 'Rule', namespace: 'App\\Rules\\' + className }, { suffix: 'Resource', namespace: 'App\\Http\\Resources\\' + className }, { suffix: 'Request', namespace: 'App\\Http\\Requests\\' + className }, { suffix: 'Controller', namespace: 'App\\Http\\Controllers\\' + className }, { suffix: 'Middleware', namespace: 'App\\Http\\Middleware\\' + className }, { suffix: 'Provider', namespace: 'App\\Providers\\' + className }, { suffix: 'Enum', namespace: 'App\\Enums\\' + className }];
+            var possiblePaths = [{ suffix: 'Job', namespace: 'App\\Jobs\\' + className }, { suffix: 'Notification', namespace: 'App\\Notifications\\' + className }, { suffix: 'Mail', namespace: 'App\\Mail\\' + className }, { suffix: 'Event', namespace: 'App\\Events\\' + className }, { suffix: 'Listener', namespace: 'App\\Listeners\\' + className }, { suffix: 'Policy', namespace: 'App\\Policies\\' + className }, { suffix: 'Rule', namespace: 'App\\Rules\\' + className }, { suffix: 'Resource', namespace: 'App\\Http\\Resources\\' + className }, { suffix: 'Request', namespace: 'App\\Http\\Requests\\' + className }, { suffix: 'Controller', namespace: 'App\\Http\\Controllers\\' + className }, { suffix: 'Middleware', namespace: 'App\\Http\\Middleware\\' + className }, { suffix: 'Provider', namespace: 'App\\Providers\\' + className }, { suffix: 'Enum', namespace: 'App\\Enums\\' + className }, { suffix: 'StatusEnum', namespace: 'App\\Enums\\' + className }, { suffix: 'Type', namespace: 'App\\Enums\\' + className }];
 
             // التحقق مما إذا كان اسم الفئة ينتهي بأحد اللواحق المعروفة
             var _iteratorNormalCompletion = true;
@@ -2636,9 +2695,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
 
             // البحث عن استخدام التعدادات (Enums)
-            if (code.includes('enum ') || code.includes('->value') || code.includes('::cases()')) {
-                // لا نستطيع استيراد تعداد محدد هنا لأننا لا نعرف اسمه، ولكن يمكننا إضافة تعليق مفيد
-                console.log('Enum usage detected. Consider importing specific enum classes.');
+            var enumRegex = /\b([A-Z][a-zA-Z0-9_]*)(StatusEnum|Enum|Type)::/g;
+            var enumMatch = void 0;
+            while ((enumMatch = enumRegex.exec(code)) !== null) {
+                if (enumMatch[0]) {
+                    var enumName = enumMatch[0].replace('::', '');
+                    console.log('Found enum usage:', enumName);
+                    var enumInfo = { name: enumName, namespace: 'App\\Enums\\' + enumName };
+                    if (!this.hasImportForClass(editor, enumInfo)) {
+                        this.addImport(editor, enumInfo);
+                    }
+                }
             }
         },
 
@@ -17198,7 +17265,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "\n.tinker {\n  height: 100vh;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: column;\n      flex-direction: column;\n  overflow: hidden;\n}\n.tinker__status {\n  background-color: #f8fafc;\n  border-bottom: 1px solid #e2e8f0;\n  padding: .5rem 1rem;\n  font-size: .875rem;\n  color: #4a5568;\n}\n.tinker__status-text {\n  display: inline-block;\n  margin-left: .5rem;\n}\n.split-view {\n  -webkit-box-flex: 1;\n  -ms-flex: 1;\n      flex: 1;\n  display: grid;\n  height: calc(100vh - 2rem);\n  width: 100%;\n  overflow: hidden;\n}\n.input,\n.output {\n  overflow: auto;\n  height: 100%;\n  width: 100%;\n}\n.input {\n  position: relative;\n}\n.output {\n  padding: 1rem;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: .875rem;\n  line-height: 1.5;\n  white-space: pre-wrap;\n  background-color: #282a36;\n  color: #f8f8f2;\n  overflow-y: auto;\n  border-left: 1px solid #44475a;\n  width: 100%;\n  -webkit-box-sizing: border-box;\n          box-sizing: border-box;\n}\n.output pre {\n  margin: 0;\n  padding: 0;\n  font-family: inherit;\n}\n.output .string {\n  color: #f1fa8c;\n}\n.output .number {\n  color: #bd93f9;\n}\n.output .boolean {\n  color: #ff79c6;\n}\n.output .null {\n  color: #6272a4;\n}\n.output .key {\n  color: #8be9fd;\n}\n.gutter {\n  background-color: #e2e8f0;\n  background-repeat: no-repeat;\n  background-position: 50%;\n}\n.gutter:hover {\n  background-color: #cbd5e0;\n}\n.gutter.gutter-horizontal {\n  cursor: col-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');\n}\n.gutter.gutter-vertical {\n  cursor: row-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');\n}\n.text-dimmed {\n  color: #a0aec0;\n}\n.error {\n  color: #f56565;\n}\n", ""]);
+exports.push([module.i, "\n.tinker {\n  height: 100vh;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: column;\n      flex-direction: column;\n  overflow: hidden;\n}\n.tinker__status {\n  background-color: #f8fafc;\n  border-bottom: 1px solid #e2e8f0;\n  padding: .5rem 1rem;\n  font-size: .875rem;\n  color: #4a5568;\n}\n.tinker__status-text {\n  display: inline-block;\n  margin-left: .5rem;\n}\n.split-view {\n  -webkit-box-flex: 1;\n  -ms-flex: 1;\n      flex: 1;\n  display: grid;\n  height: calc(100vh - 2rem);\n  width: 100%;\n  overflow: hidden;\n}\n.input,\n.output {\n  overflow: auto;\n  height: 100%;\n  width: 100%;\n}\n.input {\n  position: relative;\n}\n.output {\n  padding: 1rem;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: .875rem;\n  line-height: 1.5;\n  white-space: pre-wrap;\n  background-color: #282a36;\n  color: #f8f8f2;\n  overflow-y: auto;\n  border-left: 1px solid #44475a;\n  width: 100%;\n  -webkit-box-sizing: border-box;\n          box-sizing: border-box;\n}\n.output pre {\n  margin: 0;\n  padding: 0;\n  font-family: inherit;\n}\n.output .string {\n  color: #f1fa8c;\n}\n.output .number {\n  color: #bd93f9;\n}\n.output .boolean {\n  color: #ff79c6;\n}\n.output .null {\n  color: #6272a4;\n}\n.output .key {\n  color: #8be9fd;\n}\n.gutter {\n  background-color: #e2e8f0;\n  background-repeat: no-repeat;\n  background-position: 50%;\n}\n.gutter:hover {\n  background-color: #cbd5e0;\n}\n.gutter.gutter-horizontal {\n  cursor: col-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');\n}\n.gutter.gutter-vertical {\n  cursor: row-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');\n}\n.text-dimmed {\n  color: #a0aec0;\n}\n.error {\n  color: #f56565;\n}\n.tinker {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: column;\n      flex-direction: column;\n  height: 100%;\n  position: relative;\n}\n.tinker__container {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: row;\n      flex-direction: row;\n  height: 100%;\n}\n.tinker__status {\n  position: absolute;\n  top: 0;\n  left: 0;\n  right: 0;\n  background-color: #2c3e50;\n  color: white;\n  padding: 8px 16px;\n  text-align: center;\n  z-index: 100;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 14px;\n  border-bottom: 1px solid #34495e;\n}\n.tinker__shortcuts {\n  position: absolute;\n  top: 10px;\n  right: 10px;\n  z-index: 1000;\n}\n.shortcuts-toggle {\n  background-color: #34495e;\n  color: white;\n  padding: 5px 10px;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 12px;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n  -ms-flex-align: center;\n  align-items: center;\n  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n          box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n  -webkit-transition: background-color .2s;\n          transition: background-color .2s;\n}\n.shortcuts-toggle:hover {\n  background-color: #2c3e50;\n}\n.shortcuts-icon {\n  margin-right: 5px;\n  font-style: normal;\n}\n.shortcuts-panel {\n  position: absolute;\n  top: 35px;\n  right: 0;\n  width: 350px;\n  background-color: #2c3e50;\n  border-radius: 5px;\n  -webkit-box-shadow: 0 3px 10px rgba(0, 0, 0, .3);\n          box-shadow: 0 3px 10px rgba(0, 0, 0, .3);\n  color: white;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  overflow: hidden;\n}\n.shortcuts-header {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-pack: justify;\n  -ms-flex-pack: justify;\n  justify-content: space-between;\n  -webkit-box-align: center;\n  -ms-flex-align: center;\n  align-items: center;\n  padding: 10px 15px;\n  background-color: #34495e;\n  border-bottom: 1px solid #3d566e;\n}\n.shortcuts-header h3 {\n  margin: 0;\n  font-size: 14px;\n  font-weight: normal;\n}\n.shortcuts-close {\n  cursor: pointer;\n  font-size: 20px;\n  line-height: 1;\n}\n.shortcuts-content {\n  padding: 10px 15px;\n  max-height: 300px;\n  overflow-y: auto;\n}\n.shortcut-item {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-pack: justify;\n  -ms-flex-pack: justify;\n  justify-content: space-between;\n  margin-bottom: 10px;\n  font-size: 12px;\n}\n.shortcut-key {\n  background-color: #34495e;\n  padding: 3px 6px;\n  border-radius: 3px;\n  font-weight: bold;\n}\n.shortcut-desc {\n  color: #ecf0f1;\n}\n@media (max-width: 768px) {\n.tinker__container {\n    -webkit-box-orient: vertical;\n    -webkit-box-direction: normal;\n    -ms-flex-direction: column;\n        flex-direction: column;\n}\n.shortcuts-panel {\n    width: 280px;\n}\n}\n", ""]);
 
 // exports
 
@@ -20370,31 +20437,95 @@ var render = function() {
         ])
       : _vm._e(),
     _vm._v(" "),
+    _c("div", { staticClass: "tinker__shortcuts" }, [
+      _c(
+        "div",
+        { staticClass: "shortcuts-toggle", on: { click: _vm.toggleShortcuts } },
+        [
+          _c("i", { staticClass: "shortcuts-icon" }, [_vm._v("⌨️")]),
+          _vm._v(" الاختصارات\n        ")
+        ]
+      ),
+      _vm._v(" "),
+      _vm.showShortcuts
+        ? _c("div", { staticClass: "shortcuts-panel" }, [
+            _c("div", { staticClass: "shortcuts-header" }, [
+              _c("h3", [_vm._v("اختصارات لوحة المفاتيح")]),
+              _vm._v(" "),
+              _c(
+                "span",
+                {
+                  staticClass: "shortcuts-close",
+                  on: { click: _vm.toggleShortcuts }
+                },
+                [_vm._v("×")]
+              )
+            ]),
+            _vm._v(" "),
+            _vm._m(0)
+          ])
+        : _vm._e()
+    ]),
+    _vm._v(" "),
     _c(
       "div",
-      { staticClass: "split-view", style: _vm.gridStyle },
+      { staticClass: "tinker__container" },
       [
-        _c("TinkerInput", {
+        _c("tinker-input", {
           ref: "tinkerInput",
           attrs: { path: _vm.path },
           on: {
-            execute: _vm.executeCode,
+            execute: _vm.execute,
             "loading-status": _vm.updateLoadingStatus
           }
         }),
         _vm._v(" "),
-        _c("div", { ref: "gutter", staticClass: "gutter" }),
-        _vm._v(" "),
-        _c("div", {
-          staticClass: "output",
-          domProps: { innerHTML: _vm._s(_vm.output) }
-        })
+        _c("tinker-output", { attrs: { output: _vm.output } })
       ],
       1
     )
   ])
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "shortcuts-content" }, [
+      _c("div", { staticClass: "shortcut-item" }, [
+        _c("span", { staticClass: "shortcut-key" }, [
+          _vm._v("Ctrl+Enter / Cmd+Enter")
+        ]),
+        _vm._v(" "),
+        _c("span", { staticClass: "shortcut-desc" }, [_vm._v("تنفيذ الكود")])
+      ]),
+      _vm._v(" "),
+      _c("div", { staticClass: "shortcut-item" }, [
+        _c("span", { staticClass: "shortcut-key" }, [_vm._v("Ctrl+Space")]),
+        _vm._v(" "),
+        _c("span", { staticClass: "shortcut-desc" }, [
+          _vm._v("إظهار الاقتراحات")
+        ])
+      ]),
+      _vm._v(" "),
+      _c("div", { staticClass: "shortcut-item" }, [
+        _c("span", { staticClass: "shortcut-key" }, [_vm._v("Tab")]),
+        _vm._v(" "),
+        _c("span", { staticClass: "shortcut-desc" }, [
+          _vm._v("إكمال الكود أو إضافة مسافات")
+        ])
+      ]),
+      _vm._v(" "),
+      _c("div", { staticClass: "shortcut-item" }, [
+        _c("span", { staticClass: "shortcut-key" }, [_vm._v("Alt+I")]),
+        _vm._v(" "),
+        _c("span", { staticClass: "shortcut-desc" }, [
+          _vm._v("استيراد الفئة الحالية")
+        ])
+      ])
+    ])
+  }
+]
 render._withStripped = true
 module.exports = { render: render, staticRenderFns: staticRenderFns }
 if (false) {
