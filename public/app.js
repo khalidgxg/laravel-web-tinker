@@ -1964,6 +1964,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_codemirror___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_12_codemirror__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_axios__ = __webpack_require__("./node_modules/axios/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_13_axios__);
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 //
 //
 //
@@ -2058,6 +2060,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         this.codeEditor.on('change', function (editor) {
             localStorage.setItem('tinker-tool', editor.getValue());
             _this.checkForClassImport(editor);
+        });
+
+        // إضافة مستمع للصق (paste) لاستيراد الفئات تلقائيًا
+        this.codeEditor.on('paste', function (editor, event) {
+            // استخدام setTimeout للسماح للصق بالاكتمال أولاً
+            setTimeout(function () {
+                _this.handlePastedCode(editor);
+            }, 100);
         });
 
         this.codeEditor.on('keyup', function (editor, event) {
@@ -2390,6 +2400,68 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 editor.replaceRange(importStatement + '\n\n', { line: 0, ch: 0 }, { line: 0, ch: 0 });
                 this.lastImportLine = 0;
             }
+        },
+
+
+        // دالة جديدة للتعامل مع الكود الملصق
+        handlePastedCode: function handlePastedCode(editor) {
+            console.log('Handling pasted code');
+
+            // الحصول على النص الكامل
+            var code = editor.getValue();
+
+            // البحث عن أسماء الفئات في الكود
+            this.findAndImportClasses(editor, code);
+        },
+
+
+        // دالة للبحث عن أسماء الفئات في الكود واستيرادها
+        findAndImportClasses: function findAndImportClasses(editor, code) {
+            var _this5 = this;
+
+            console.log('Searching for classes in pasted code');
+
+            // تعبير منتظم للبحث عن أسماء الفئات المحتملة
+            // يبحث عن الكلمات التي تبدأ بحرف كبير وتتبعها أحرف صغيرة أو أرقام أو _
+            var classNameRegex = /\b([A-Z][a-zA-Z0-9_]*)\b/g;
+
+            // الحصول على جميع أسماء الفئات المحتملة
+            var matches = code.match(classNameRegex) || [];
+            var uniqueClassNames = [].concat(_toConsumableArray(new Set(matches))); // إزالة التكرارات
+
+            console.log('Found potential class names:', uniqueClassNames);
+
+            // التحقق من كل اسم فئة محتمل
+            uniqueClassNames.forEach(function (className) {
+                // تجاهل الكلمات المحجوزة في PHP
+                if (['Class', 'Interface', 'Trait', 'Function', 'Array', 'String', 'Int', 'Float', 'Bool', 'True', 'False', 'Null'].includes(className)) {
+                    return;
+                }
+
+                // البحث عن الفئة في قائمة الفئات المتاحة
+                var classInfo = _this5.phpClasses.find(function (cls) {
+                    return typeof cls === 'string' && cls === className || cls.name && cls.name === className;
+                });
+
+                if (classInfo) {
+                    console.log('Found class to import:', className);
+
+                    // التحقق مما إذا كانت الفئة مستوردة بالفعل
+                    if (!_this5.hasImportForClass(editor, classInfo)) {
+                        // استيراد الفئة
+                        _this5.addImport(editor, classInfo);
+                    }
+                }
+            });
+        },
+
+
+        // دالة جديدة لإظهار إشعار بالاستيراد
+        showImportNotification: function showImportNotification(className, namespace) {
+            console.log('Imported ' + className + ' from ' + namespace);
+
+            // يمكن إضافة إشعار مرئي هنا إذا كنت ترغب في ذلك
+            // على سبيل المثال، يمكن إضافة عنصر div مؤقت في أعلى المحرر
         }
     }
 });

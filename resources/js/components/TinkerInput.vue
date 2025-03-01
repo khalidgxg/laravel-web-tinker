@@ -141,6 +141,14 @@ export default {
             this.checkForClassImport(editor);
         });
 
+        // إضافة مستمع للصق (paste) لاستيراد الفئات تلقائيًا
+        this.codeEditor.on('paste', (editor, event) => {
+            // استخدام setTimeout للسماح للصق بالاكتمال أولاً
+            setTimeout(() => {
+                this.handlePastedCode(editor);
+            }, 100);
+        });
+
         this.codeEditor.on('keyup', (editor, event) => {
             // تحسين استجابة الاقتراحات عند الكتابة
             const keyCode = event.keyCode;
@@ -687,6 +695,64 @@ export default {
                     { line: 0, ch: 0 });
                 this.lastImportLine = 0;
             }
+        },
+
+        // دالة جديدة للتعامل مع الكود الملصق
+        handlePastedCode(editor) {
+            console.log('Handling pasted code');
+
+            // الحصول على النص الكامل
+            const code = editor.getValue();
+
+            // البحث عن أسماء الفئات في الكود
+            this.findAndImportClasses(editor, code);
+        },
+
+        // دالة للبحث عن أسماء الفئات في الكود واستيرادها
+        findAndImportClasses(editor, code) {
+            console.log('Searching for classes in pasted code');
+
+            // تعبير منتظم للبحث عن أسماء الفئات المحتملة
+            // يبحث عن الكلمات التي تبدأ بحرف كبير وتتبعها أحرف صغيرة أو أرقام أو _
+            const classNameRegex = /\b([A-Z][a-zA-Z0-9_]*)\b/g;
+
+            // الحصول على جميع أسماء الفئات المحتملة
+            const matches = code.match(classNameRegex) || [];
+            const uniqueClassNames = [...new Set(matches)]; // إزالة التكرارات
+
+            console.log('Found potential class names:', uniqueClassNames);
+
+            // التحقق من كل اسم فئة محتمل
+            uniqueClassNames.forEach(className => {
+                // تجاهل الكلمات المحجوزة في PHP
+                if (['Class', 'Interface', 'Trait', 'Function', 'Array', 'String', 'Int', 'Float', 'Bool', 'True', 'False', 'Null'].includes(className)) {
+                    return;
+                }
+
+                // البحث عن الفئة في قائمة الفئات المتاحة
+                const classInfo = this.phpClasses.find(cls =>
+                    (typeof cls === 'string' && cls === className) ||
+                    (cls.name && cls.name === className)
+                );
+
+                if (classInfo) {
+                    console.log('Found class to import:', className);
+
+                    // التحقق مما إذا كانت الفئة مستوردة بالفعل
+                    if (!this.hasImportForClass(editor, classInfo)) {
+                        // استيراد الفئة
+                        this.addImport(editor, classInfo);
+                    }
+                }
+            });
+        },
+
+        // دالة جديدة لإظهار إشعار بالاستيراد
+        showImportNotification(className, namespace) {
+            console.log(`Imported ${className} from ${namespace}`);
+
+            // يمكن إضافة إشعار مرئي هنا إذا كنت ترغب في ذلك
+            // على سبيل المثال، يمكن إضافة عنصر div مؤقت في أعلى المحرر
         }
     }
 };
