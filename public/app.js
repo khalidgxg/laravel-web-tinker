@@ -2158,53 +2158,73 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var cursor = editor.getCursor();
             var token = editor.getTokenAt(cursor);
 
-            console.log('Checking for class import:', token);
+            // تحقق مما إذا كان المؤشر في نهاية كلمة
+            var isAtWordEnd = cursor.ch === token.end;
 
-            // Check if we just typed a class name
-            if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
+            // تحقق مما إذا كانت الكلمة اسم فئة محتمل (يبدأ بحرف كبير)
+            if (isAtWordEnd && token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
                 var className = token.string;
                 console.log('Found potential class name:', className);
 
-                // Find if this is a known class that needs import
+                // تحقق مما إذا كان هذا اسم فئة معروف
                 var classInfo = this.phpClasses.find(function (cls) {
                     return cls.name === className;
                 });
 
+                // تحقق مما إذا كانت الفئة تحتاج إلى استيراد
                 if (classInfo && !this.importedClasses.has(className)) {
                     console.log('Class needs import:', classInfo);
-                    // Show import suggestion
-                    this.showImportSuggestion(editor, classInfo);
+
+                    // تحقق مما إذا كان السطر يحتوي بالفعل على عبارة استيراد
+                    if (!this.hasImportForClass(editor, classInfo)) {
+                        // إضافة الاستيراد تلقائيًا بدون عرض اقتراح
+                        this.addImport(editor, classInfo);
+                    }
                 }
             }
+        },
+        hasImportForClass: function hasImportForClass(editor, classInfo) {
+            // تحقق مما إذا كان هناك بالفعل استيراد لهذه الفئة
+            for (var i = 0; i < editor.lineCount(); i++) {
+                var line = editor.getLine(i);
+                if (line.includes('use ' + classInfo.namespace + ';')) {
+                    return true;
+                }
+            }
+            return false;
         },
         showImportSuggestion: function showImportSuggestion(editor, classInfo) {
             var _this4 = this;
 
             console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
 
-            // استخدام واجهة CodeMirror لعرض الاقتراح
-            var wrapper = document.createElement('div');
-            wrapper.className = 'CodeMirror-import-suggestion';
-            wrapper.innerHTML = '<div class="import-message">Import ' + classInfo.namespace + '?</div>\n                                <button class="import-button">Import</button>';
+            // إنشاء عنصر الاقتراح
+            var marker = document.createElement('div');
+            marker.className = 'CodeMirror-import-tooltip';
+            marker.innerHTML = 'Import ' + classInfo.namespace + '? <a href="#" class="import-link">Import</a>';
 
-            // إضافة الاقتراح إلى المحرر
+            // إضافة الاقتراح كعلامة في المحرر
             var cursor = editor.getCursor();
-            editor.addWidget(cursor, wrapper, false);
+            var lineHandle = editor.getLineHandle(cursor.line);
 
-            // إضافة مستمع الحدث لزر الاستيراد
-            var importBtn = wrapper.querySelector('.import-button');
-            importBtn.addEventListener('click', function () {
-                _this4.addImport(editor, classInfo);
-                if (wrapper.parentNode) {
-                    wrapper.parentNode.removeChild(wrapper);
-                }
+            // إضافة العلامة إلى المحرر
+            var markText = editor.markText({ line: cursor.line, ch: 0 }, { line: cursor.line, ch: editor.getLine(cursor.line).length }, {
+                replacedWith: marker,
+                clearOnEnter: true,
+                handleMouseEvents: true
             });
 
-            // إزالة الاقتراح بعد 5 ثوانٍ
+            // إضافة مستمع الحدث لرابط الاستيراد
+            var importLink = marker.querySelector('.import-link');
+            importLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                _this4.addImport(editor, classInfo);
+                markText.clear();
+            });
+
+            // إزالة العلامة بعد 5 ثوانٍ
             setTimeout(function () {
-                if (wrapper.parentNode) {
-                    wrapper.parentNode.removeChild(wrapper);
-                }
+                markText.clear();
             }, 5000);
         },
         importClass: function importClass(editor) {
@@ -16120,7 +16140,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n.CodeMirror-import-suggestion {\n  background: #2c3e50;\n  color: white;\n  border-radius: 4px;\n  padding: 8px 12px;\n  margin-top: 5px;\n  -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, .3);\n          box-shadow: 0 2px 8px rgba(0, 0, 0, .3);\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n  -ms-flex-align: center;\n  align-items: center;\n  -webkit-box-pack: justify;\n  -ms-flex-pack: justify;\n  justify-content: space-between;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 12px;\n  max-width: 400px;\n}\n.import-message {\n  margin-right: 10px;\n}\n.import-button {\n  background: #27ae60;\n  color: white;\n  border: none;\n  border-radius: 3px;\n  padding: 4px 10px;\n  cursor: pointer;\n  font-size: 12px;\n  -webkit-transition: background .2s;\n          transition: background .2s;\n}\n.import-button:hover {\n  background: #2ecc71;\n}\n", ""]);
+exports.push([module.i, "\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n.CodeMirror-import-tooltip {\n  background: rgba(44, 62, 80, .9);\n  color: white;\n  padding: 5px 10px;\n  border-radius: 3px;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 12px;\n  display: inline-block;\n  margin-left: 20px;\n  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n          box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n}\n.import-link {\n  color: #2ecc71;\n  text-decoration: none;\n  margin-left: 8px;\n  font-weight: bold;\n}\n.import-link:hover {\n  text-decoration: underline;\n}\n", ""]);
 
 // exports
 

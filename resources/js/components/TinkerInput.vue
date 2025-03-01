@@ -218,51 +218,75 @@ export default {
             const cursor = editor.getCursor();
             const token = editor.getTokenAt(cursor);
 
-            console.log('Checking for class import:', token);
+            // تحقق مما إذا كان المؤشر في نهاية كلمة
+            const isAtWordEnd = cursor.ch === token.end;
 
-            // Check if we just typed a class name
-            if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
+            // تحقق مما إذا كانت الكلمة اسم فئة محتمل (يبدأ بحرف كبير)
+            if (isAtWordEnd && token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
                 const className = token.string;
                 console.log('Found potential class name:', className);
 
-                // Find if this is a known class that needs import
+                // تحقق مما إذا كان هذا اسم فئة معروف
                 const classInfo = this.phpClasses.find(cls => cls.name === className);
 
+                // تحقق مما إذا كانت الفئة تحتاج إلى استيراد
                 if (classInfo && !this.importedClasses.has(className)) {
                     console.log('Class needs import:', classInfo);
-                    // Show import suggestion
-                    this.showImportSuggestion(editor, classInfo);
+
+                    // تحقق مما إذا كان السطر يحتوي بالفعل على عبارة استيراد
+                    if (!this.hasImportForClass(editor, classInfo)) {
+                        // إضافة الاستيراد تلقائيًا بدون عرض اقتراح
+                        this.addImport(editor, classInfo);
+                    }
                 }
             }
+        },
+
+        hasImportForClass(editor, classInfo) {
+            // تحقق مما إذا كان هناك بالفعل استيراد لهذه الفئة
+            for (let i = 0; i < editor.lineCount(); i++) {
+                const line = editor.getLine(i);
+                if (line.includes(`use ${classInfo.namespace};`)) {
+                    return true;
+                }
+            }
+            return false;
         },
 
         showImportSuggestion(editor, classInfo) {
             console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
 
-            // استخدام واجهة CodeMirror لعرض الاقتراح
-            const wrapper = document.createElement('div');
-            wrapper.className = 'CodeMirror-import-suggestion';
-            wrapper.innerHTML = `<div class="import-message">Import ${classInfo.namespace}?</div>
-                                <button class="import-button">Import</button>`;
+            // إنشاء عنصر الاقتراح
+            const marker = document.createElement('div');
+            marker.className = 'CodeMirror-import-tooltip';
+            marker.innerHTML = `Import ${classInfo.namespace}? <a href="#" class="import-link">Import</a>`;
 
-            // إضافة الاقتراح إلى المحرر
+            // إضافة الاقتراح كعلامة في المحرر
             const cursor = editor.getCursor();
-            editor.addWidget(cursor, wrapper, false);
+            const lineHandle = editor.getLineHandle(cursor.line);
 
-            // إضافة مستمع الحدث لزر الاستيراد
-            const importBtn = wrapper.querySelector('.import-button');
-            importBtn.addEventListener('click', () => {
-                this.addImport(editor, classInfo);
-                if (wrapper.parentNode) {
-                    wrapper.parentNode.removeChild(wrapper);
+            // إضافة العلامة إلى المحرر
+            const markText = editor.markText(
+                { line: cursor.line, ch: 0 },
+                { line: cursor.line, ch: editor.getLine(cursor.line).length },
+                {
+                    replacedWith: marker,
+                    clearOnEnter: true,
+                    handleMouseEvents: true
                 }
+            );
+
+            // إضافة مستمع الحدث لرابط الاستيراد
+            const importLink = marker.querySelector('.import-link');
+            importLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.addImport(editor, classInfo);
+                markText.clear();
             });
 
-            // إزالة الاقتراح بعد 5 ثوانٍ
+            // إزالة العلامة بعد 5 ثوانٍ
             setTimeout(() => {
-                if (wrapper.parentNode) {
-                    wrapper.parentNode.removeChild(wrapper);
-                }
+                markText.clear();
             }, 5000);
         },
 
@@ -354,37 +378,26 @@ li.CodeMirror-hint-active {
     color: white;
 }
 
-.CodeMirror-import-suggestion {
-    background: #2c3e50;
+.CodeMirror-import-tooltip {
+    background: rgba(44, 62, 80, 0.9);
     color: white;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-top: 5px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 5px 10px;
+    border-radius: 3px;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 12px;
-    max-width: 400px;
+    display: inline-block;
+    margin-left: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.import-message {
-    margin-right: 10px;
+.import-link {
+    color: #2ecc71;
+    text-decoration: none;
+    margin-left: 8px;
+    font-weight: bold;
 }
 
-.import-button {
-    background: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    padding: 4px 10px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background 0.2s;
-}
-
-.import-button:hover {
-    background: #2ecc71;
+.import-link:hover {
+    text-decoration: underline;
 }
 </style>
