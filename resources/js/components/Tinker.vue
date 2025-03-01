@@ -56,6 +56,7 @@ export default {
         gridStyle() {
             return {
                 gridTemplateColumns: `1fr ${this.gutterWidth}px 1fr`,
+                width: '100%'
             };
         },
     },
@@ -107,6 +108,7 @@ export default {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .tinker__status {
@@ -126,11 +128,14 @@ export default {
     flex: 1;
     display: grid;
     height: calc(100vh - 2rem);
+    width: 100%;
+    overflow: hidden;
 }
 
 .input, .output {
     overflow: auto;
     height: 100%;
+    width: 100%;
 }
 
 .input {
@@ -147,6 +152,8 @@ export default {
     color: #f8f8f2;
     overflow-y: auto;
     border-left: 1px solid #44475a;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .output pre {

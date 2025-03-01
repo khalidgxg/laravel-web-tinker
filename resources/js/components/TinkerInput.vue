@@ -365,6 +365,19 @@ export default {
 <style src="codemirror/lib/codemirror.css" />
 <style src="codemirror/theme/idea.css" />
 <style>
+.CodeMirror {
+    height: 100%;
+    width: 100%;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.input {
+    height: 100%;
+    width: 100%;
+}
+
 .CodeMirror-hints {
     position: absolute;
     z-index: 1000;
