@@ -2024,7 +2024,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     _this.executeCode();
                 },
                 'Ctrl-Space': function CtrlSpace(cm) {
-                    _this.showHints(cm);
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this.showHints.bind(_this), { completeSingle: false });
                 },
                 'Tab': function Tab(cm) {
                     if (cm.somethingSelected()) {
@@ -2057,20 +2057,34 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
         this.codeEditor.on('change', function (editor) {
             localStorage.setItem('tinker-tool', editor.getValue());
-            _this.autoShowHints(editor);
             _this.checkForClassImport(editor);
         });
 
         this.codeEditor.on('keyup', function (editor, event) {
             // تحسين استجابة الاقتراحات عند الكتابة
             var keyCode = event.keyCode;
-            if (!editor.state.completionActive && (keyCode === 190 || // النقطة
-            keyCode === 186 || // النقطتان
-            keyCode >= 65 && keyCode <= 90 || // الحروف
-            keyCode >= 97 && keyCode <= 122)) {
-                // الحروف
 
-                __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.commands.autocomplete(editor, null, { completeSingle: false });
+            // تحقق من وجود :: أو -> قبل الموضع الحالي
+            var cursor = editor.getCursor();
+            var line = editor.getLine(cursor.line);
+            var staticMethodTrigger = line.substring(0, cursor.ch).endsWith('::');
+            var methodTrigger = line.substring(0, cursor.ch).endsWith('->');
+
+            if (staticMethodTrigger || methodTrigger) {
+                // إظهار الاقتراحات عند كتابة :: أو ->
+                setTimeout(function () {
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(editor, _this.showHints.bind(_this), { completeSingle: false });
+                }, 100);
+            } else if (!editor.state.completionActive && (keyCode === 190 || // النقطة
+            keyCode === 186 || // النقطتان
+            keyCode >= 65 && keyCode <= 90 || // الحروف الكبيرة
+            keyCode >= 97 && keyCode <= 122)) {
+                // الحروف الصغيرة
+
+                // إظهار الاقتراحات عند كتابة الحروف
+                setTimeout(function () {
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(editor, _this.showHints.bind(_this), { completeSingle: false });
+                }, 100);
             }
         });
 
@@ -2240,45 +2254,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             return {
                 list: list,
                 from: { line: cursor.line, ch: token.start },
-                to: { line: cursor.line, ch: token.end }
+                to: { line: cursor.line, ch: token.end },
+                // إضافة هذا الخيار لمنع الإكمال التلقائي
+                completeSingle: false
             };
         },
-        autoShowHints: function autoShowHints(cm) {
-            var _this4 = this;
-
-            var cursor = cm.getCursor();
-            var token = cm.getTokenAt(cursor);
-            var line = cm.getLine(cursor.line);
-
-            // تحقق من وجود :: أو -> قبل الموضع الحالي
-            var staticMethodTrigger = line.substring(0, cursor.ch).endsWith('::');
-            var methodTrigger = line.substring(0, cursor.ch).endsWith('->');
-
-            if (staticMethodTrigger || methodTrigger) {
-                console.log('Trigger detected:', staticMethodTrigger ? '::' : '->');
-                setTimeout(function () {
-                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.hint.anyword);
-                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4));
-                }, 100);
-                return;
-            }
-
-            // إظهار الاقتراحات عند كتابة حرف جديد إذا كان هناك على الأقل حرفين
-            if (token.string.match(/^\w{2,}$/)) {
-                setTimeout(function () {
-                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4));
-                }, 100);
-            }
-        },
         handleTabCompletion: function handleTabCompletion(cm) {
-            if (cm.state.completionActive) {
-                return __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pass;
-            }
             var cursor = cm.getCursor();
             var token = cm.getTokenAt(cursor);
 
             if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
-                this.showHints(cm);
+                __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, this.showHints.bind(this), { completeSingle: false });
             } else {
                 cm.replaceSelection('    ');
             }
@@ -2323,7 +2309,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             return false;
         },
         showImportSuggestion: function showImportSuggestion(editor, classInfo) {
-            var _this5 = this;
+            var _this4 = this;
 
             console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
 
@@ -2347,7 +2333,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var importLink = marker.querySelector('.import-link');
             importLink.addEventListener('click', function (e) {
                 e.preventDefault();
-                _this5.addImport(editor, classInfo);
+                _this4.addImport(editor, classInfo);
                 markText.clear();
             });
 

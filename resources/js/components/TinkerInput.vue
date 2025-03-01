@@ -105,7 +105,7 @@ export default {
                     this.executeCode();
                 },
                 'Ctrl-Space': (cm) => {
-                    this.showHints(cm);
+                    CodeMirror.showHint(cm, this.showHints.bind(this), {completeSingle: false});
                 },
                 'Tab': (cm) => {
                     if (cm.somethingSelected()) {
@@ -138,20 +138,34 @@ export default {
 
         this.codeEditor.on('change', editor => {
             localStorage.setItem('tinker-tool', editor.getValue());
-            this.autoShowHints(editor);
             this.checkForClassImport(editor);
         });
 
         this.codeEditor.on('keyup', (editor, event) => {
             // تحسين استجابة الاقتراحات عند الكتابة
             const keyCode = event.keyCode;
-            if (!editor.state.completionActive &&
+
+            // تحقق من وجود :: أو -> قبل الموضع الحالي
+            const cursor = editor.getCursor();
+            const line = editor.getLine(cursor.line);
+            const staticMethodTrigger = line.substring(0, cursor.ch).endsWith('::');
+            const methodTrigger = line.substring(0, cursor.ch).endsWith('->');
+
+            if (staticMethodTrigger || methodTrigger) {
+                // إظهار الاقتراحات عند كتابة :: أو ->
+                setTimeout(() => {
+                    CodeMirror.showHint(editor, this.showHints.bind(this), {completeSingle: false});
+                }, 100);
+            } else if (!editor.state.completionActive &&
                 (keyCode === 190 || // النقطة
                  keyCode === 186 || // النقطتان
-                 (keyCode >= 65 && keyCode <= 90) || // الحروف
-                 (keyCode >= 97 && keyCode <= 122))) { // الحروف
+                 (keyCode >= 65 && keyCode <= 90) || // الحروف الكبيرة
+                 (keyCode >= 97 && keyCode <= 122))) { // الحروف الصغيرة
 
-                CodeMirror.commands.autocomplete(editor, null, {completeSingle: false});
+                // إظهار الاقتراحات عند كتابة الحروف
+                setTimeout(() => {
+                    CodeMirror.showHint(editor, this.showHints.bind(this), {completeSingle: false});
+                }, 100);
             }
         });
 
@@ -388,45 +402,18 @@ export default {
             return {
                 list: list,
                 from: {line: cursor.line, ch: token.start},
-                to: {line: cursor.line, ch: token.end}
+                to: {line: cursor.line, ch: token.end},
+                // إضافة هذا الخيار لمنع الإكمال التلقائي
+                completeSingle: false
             };
         },
 
-        autoShowHints(cm) {
-            const cursor = cm.getCursor();
-            const token = cm.getTokenAt(cursor);
-            const line = cm.getLine(cursor.line);
-
-            // تحقق من وجود :: أو -> قبل الموضع الحالي
-            const staticMethodTrigger = line.substring(0, cursor.ch).endsWith('::');
-            const methodTrigger = line.substring(0, cursor.ch).endsWith('->');
-
-            if (staticMethodTrigger || methodTrigger) {
-                console.log('Trigger detected:', staticMethodTrigger ? '::' : '->');
-                setTimeout(() => {
-                    CodeMirror.showHint(cm, CodeMirror.hint.anyword);
-                    CodeMirror.showHint(cm, this.showHints.bind(this));
-                }, 100);
-                return;
-            }
-
-            // إظهار الاقتراحات عند كتابة حرف جديد إذا كان هناك على الأقل حرفين
-            if (token.string.match(/^\w{2,}$/)) {
-                setTimeout(() => {
-                    CodeMirror.showHint(cm, this.showHints.bind(this));
-                }, 100);
-            }
-        },
-
         handleTabCompletion(cm) {
-            if (cm.state.completionActive) {
-                return CodeMirror.Pass;
-            }
             const cursor = cm.getCursor();
             const token = cm.getTokenAt(cursor);
 
             if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
-                this.showHints(cm);
+                CodeMirror.showHint(cm, this.showHints.bind(this), {completeSingle: false});
             } else {
                 cm.replaceSelection('    ');
             }
