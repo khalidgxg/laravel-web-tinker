@@ -248,30 +248,17 @@ export default {
                 // إذا كان هناك سياق محدد، استخدم الاقتراحات المناسبة له
                 const contextSuggestions = this.contextualSuggestions[context.type] || [];
 
-                // إضافة اسم الكائن إلى الاقتراحات إذا كان مناسبًا
-                if (context.objectName) {
-                    contextSuggestions.forEach(suggestion => {
-                        suggestions.push({
-                            text: suggestion,
-                            displayText: suggestion,
-                            className: `hint-${context.type}`,
-                            render: (element, self, data) => {
-                                element.innerHTML = `<span class="hint-${context.type}">${data.displayText}</span>`;
-                            }
-                        });
+                // إضافة اقتراحات السياق فقط (بدون إضافة اقتراحات عامة)
+                contextSuggestions.forEach(suggestion => {
+                    suggestions.push({
+                        text: suggestion,
+                        displayText: suggestion,
+                        className: `hint-${context.type}`,
+                        render: (element, self, data) => {
+                            element.innerHTML = `<span class="hint-${context.type}">${data.displayText}</span>`;
+                        }
                     });
-                } else {
-                    contextSuggestions.forEach(suggestion => {
-                        suggestions.push({
-                            text: suggestion,
-                            displayText: suggestion,
-                            className: `hint-${context.type}`,
-                            render: (element, self, data) => {
-                                element.innerHTML = `<span class="hint-${context.type}">${data.displayText}</span>`;
-                            }
-                        });
-                    });
-                }
+                });
             } else {
                 // إذا لم يكن هناك سياق محدد، استخدم الاقتراحات العامة
 
@@ -314,28 +301,22 @@ export default {
                 item.text.toLowerCase().includes(currentWord)
             );
 
-            // ترتيب الاقتراحات: الفئات أولاً، ثم الواجهات، ثم الأساليب
+            // ترتيب الاقتراحات
             filteredList.sort((a, b) => {
-                // الفئات أولاً
-                if (a.className === 'hint-class' && b.className !== 'hint-class') return -1;
-                if (a.className !== 'hint-class' && b.className === 'hint-class') return 1;
-
-                // ثم الواجهات
-                if (a.className === 'hint-facade' && b.className !== 'hint-facade') return -1;
-                if (a.className !== 'hint-facade' && b.className === 'hint-facade') return 1;
-
-                // ثم ترتيب أبجدي
+                // ترتيب أبجدي ضمن نفس النوع
                 return a.text.localeCompare(b.text);
             });
 
-            editor.showHint({
-                completeSingle: false,
-                hint: () => ({
-                    list: filteredList,
-                    from: CodeMirror.Pos(cursor.line, start),
-                    to: CodeMirror.Pos(cursor.line, end)
-                })
-            });
+            if (filteredList.length > 0) {
+                editor.showHint({
+                    completeSingle: false,
+                    hint: () => ({
+                        list: filteredList,
+                        from: CodeMirror.Pos(cursor.line, start),
+                        to: CodeMirror.Pos(cursor.line, end)
+                    })
+                });
+            }
         },
 
         // تحليل السياق الحالي لتحديد نوع الاقتراحات المناسبة
@@ -343,6 +324,8 @@ export default {
             const cursor = editor.getCursor();
             const line = editor.getLine(cursor.line);
             const lineUntilCursor = line.substring(0, cursor.ch);
+
+            console.log('Analyzing context for line:', lineUntilCursor);
 
             // البحث عن نمط "->", "::" أو "."
             const arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
@@ -352,10 +335,12 @@ export default {
             // تحقق من وجود نمط "Model::" (مثل User::)
             if (staticMatch) {
                 const className = staticMatch[1];
+                console.log('Found static match:', className);
 
                 // تحقق من أنواع خاصة مثل DB, Auth, etc.
                 const specialFacades = ['DB', 'Auth', 'Cache', 'Config', 'Route', 'Session', 'Storage', 'Hash', 'Validator', 'Event', 'Log'];
                 if (specialFacades.includes(className)) {
+                    console.log('Detected special facade:', className);
                     return { type: 'db', objectName: className };
                 }
 
@@ -364,8 +349,10 @@ export default {
                     // تحقق مما إذا كان نموذجًا (Model)
                     const classInfo = this.phpClasses.find(cls => cls.name === className);
                     if (classInfo && classInfo.namespace.includes('\\Models\\')) {
+                        console.log('Detected model class:', className);
                         return { type: 'model', objectName: className };
                     }
+                    console.log('Detected class (treating as model):', className);
                     return { type: 'model', objectName: className };
                 }
             }
@@ -373,18 +360,22 @@ export default {
             // تحقق من وجود نمط "->method" (مثل $users->)
             if (arrowMatch) {
                 const variableName = arrowMatch[1];
+                console.log('Found arrow match:', variableName);
 
                 // تحقق من السياق السابق لتحديد نوع المتغير
                 const contextType = this.determineVariableType(editor, variableName);
+                console.log('Determined variable type:', contextType);
                 return { type: contextType, objectName: variableName };
             }
 
             // تحقق من وجود نمط "." (للسلاسل النصية أو المصفوفات)
             if (dotMatch) {
+                console.log('Found dot match:', dotMatch[1]);
                 return { type: 'collection', objectName: dotMatch[1] };
             }
 
             // لا يوجد سياق محدد
+            console.log('No specific context detected');
             return { type: null, objectName: null };
         },
 
@@ -443,9 +434,22 @@ export default {
         autoShowHints(editor) {
             const cursor = editor.getCursor();
             const token = editor.getTokenAt(cursor);
+            const line = editor.getLine(cursor.line);
+            const lineUntilCursor = line.substring(0, cursor.ch);
 
-            if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
+            // عرض الاقتراحات تلقائيًا عند كتابة "::" أو "->"
+            if (lineUntilCursor.endsWith('::') || lineUntilCursor.endsWith('->')) {
                 this.showHints(editor);
+                return;
+            }
+
+            // عرض الاقتراحات عند كتابة متغير أو كلمة مفتاحية
+            if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
+                // تحقق مما إذا كان هناك سياق محدد
+                const context = this.analyzeContext(editor);
+                if (context.type) {
+                    this.showHints(editor);
+                }
             }
         },
 

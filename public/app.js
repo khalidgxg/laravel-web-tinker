@@ -2154,30 +2154,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 // إذا كان هناك سياق محدد، استخدم الاقتراحات المناسبة له
                 var contextSuggestions = this.contextualSuggestions[context.type] || [];
 
-                // إضافة اسم الكائن إلى الاقتراحات إذا كان مناسبًا
-                if (context.objectName) {
-                    contextSuggestions.forEach(function (suggestion) {
-                        suggestions.push({
-                            text: suggestion,
-                            displayText: suggestion,
-                            className: 'hint-' + context.type,
-                            render: function render(element, self, data) {
-                                element.innerHTML = '<span class="hint-' + context.type + '">' + data.displayText + '</span>';
-                            }
-                        });
+                // إضافة اقتراحات السياق فقط (بدون إضافة اقتراحات عامة)
+                contextSuggestions.forEach(function (suggestion) {
+                    suggestions.push({
+                        text: suggestion,
+                        displayText: suggestion,
+                        className: 'hint-' + context.type,
+                        render: function render(element, self, data) {
+                            element.innerHTML = '<span class="hint-' + context.type + '">' + data.displayText + '</span>';
+                        }
                     });
-                } else {
-                    contextSuggestions.forEach(function (suggestion) {
-                        suggestions.push({
-                            text: suggestion,
-                            displayText: suggestion,
-                            className: 'hint-' + context.type,
-                            render: function render(element, self, data) {
-                                element.innerHTML = '<span class="hint-' + context.type + '">' + data.displayText + '</span>';
-                            }
-                        });
-                    });
-                }
+                });
             } else {
                 // إذا لم يكن هناك سياق محدد، استخدم الاقتراحات العامة
 
@@ -2220,30 +2207,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 return item.text.toLowerCase().includes(currentWord);
             });
 
-            // ترتيب الاقتراحات: الفئات أولاً، ثم الواجهات، ثم الأساليب
+            // ترتيب الاقتراحات
             filteredList.sort(function (a, b) {
-                // الفئات أولاً
-                if (a.className === 'hint-class' && b.className !== 'hint-class') return -1;
-                if (a.className !== 'hint-class' && b.className === 'hint-class') return 1;
-
-                // ثم الواجهات
-                if (a.className === 'hint-facade' && b.className !== 'hint-facade') return -1;
-                if (a.className !== 'hint-facade' && b.className === 'hint-facade') return 1;
-
-                // ثم ترتيب أبجدي
+                // ترتيب أبجدي ضمن نفس النوع
                 return a.text.localeCompare(b.text);
             });
 
-            editor.showHint({
-                completeSingle: false,
-                hint: function hint() {
-                    return {
-                        list: filteredList,
-                        from: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, start),
-                        to: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, end)
-                    };
-                }
-            });
+            if (filteredList.length > 0) {
+                editor.showHint({
+                    completeSingle: false,
+                    hint: function hint() {
+                        return {
+                            list: filteredList,
+                            from: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, start),
+                            to: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, end)
+                        };
+                    }
+                });
+            }
         },
 
 
@@ -2253,6 +2234,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var line = editor.getLine(cursor.line);
             var lineUntilCursor = line.substring(0, cursor.ch);
 
+            console.log('Analyzing context for line:', lineUntilCursor);
+
             // البحث عن نمط "->", "::" أو "."
             var arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
             var staticMatch = lineUntilCursor.match(/(\w+)\s*::$/);
@@ -2261,10 +2244,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             // تحقق من وجود نمط "Model::" (مثل User::)
             if (staticMatch) {
                 var className = staticMatch[1];
+                console.log('Found static match:', className);
 
                 // تحقق من أنواع خاصة مثل DB, Auth, etc.
                 var specialFacades = ['DB', 'Auth', 'Cache', 'Config', 'Route', 'Session', 'Storage', 'Hash', 'Validator', 'Event', 'Log'];
                 if (specialFacades.includes(className)) {
+                    console.log('Detected special facade:', className);
                     return { type: 'db', objectName: className };
                 }
 
@@ -2275,8 +2260,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         return cls.name === className;
                     });
                     if (classInfo && classInfo.namespace.includes('\\Models\\')) {
+                        console.log('Detected model class:', className);
                         return { type: 'model', objectName: className };
                     }
+                    console.log('Detected class (treating as model):', className);
                     return { type: 'model', objectName: className };
                 }
             }
@@ -2284,18 +2271,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             // تحقق من وجود نمط "->method" (مثل $users->)
             if (arrowMatch) {
                 var variableName = arrowMatch[1];
+                console.log('Found arrow match:', variableName);
 
                 // تحقق من السياق السابق لتحديد نوع المتغير
                 var contextType = this.determineVariableType(editor, variableName);
+                console.log('Determined variable type:', contextType);
                 return { type: contextType, objectName: variableName };
             }
 
             // تحقق من وجود نمط "." (للسلاسل النصية أو المصفوفات)
             if (dotMatch) {
+                console.log('Found dot match:', dotMatch[1]);
                 return { type: 'collection', objectName: dotMatch[1] };
             }
 
             // لا يوجد سياق محدد
+            console.log('No specific context detected');
             return { type: null, objectName: null };
         },
 
@@ -2407,9 +2398,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         autoShowHints: function autoShowHints(editor) {
             var cursor = editor.getCursor();
             var token = editor.getTokenAt(cursor);
+            var line = editor.getLine(cursor.line);
+            var lineUntilCursor = line.substring(0, cursor.ch);
 
-            if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
+            // عرض الاقتراحات تلقائيًا عند كتابة "::" أو "->"
+            if (lineUntilCursor.endsWith('::') || lineUntilCursor.endsWith('->')) {
                 this.showHints(editor);
+                return;
+            }
+
+            // عرض الاقتراحات عند كتابة متغير أو كلمة مفتاحية
+            if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
+                // تحقق مما إذا كان هناك سياق محدد
+                var context = this.analyzeContext(editor);
+                if (context.type) {
+                    this.showHints(editor);
+                }
             }
         },
         handleTabCompletion: function handleTabCompletion(cm) {
