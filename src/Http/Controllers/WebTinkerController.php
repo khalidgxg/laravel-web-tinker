@@ -52,100 +52,175 @@ class WebTinkerController
 
     public function getAvailableClasses()
     {
-        $result = [];
-
-        // Common Laravel classes
-        $laravelClasses = [
-            ['name' => 'User', 'namespace' => 'App\\Models\\User'],
-            ['name' => 'Auth', 'namespace' => 'Illuminate\\Support\\Facades\\Auth'],
-            ['name' => 'DB', 'namespace' => 'Illuminate\\Support\\Facades\\DB'],
-            ['name' => 'Route', 'namespace' => 'Illuminate\\Support\\Facades\\Route'],
-            ['name' => 'Storage', 'namespace' => 'Illuminate\\Support\\Facades\\Storage'],
-            ['name' => 'Hash', 'namespace' => 'Illuminate\\Support\\Facades\\Hash'],
-            ['name' => 'Cache', 'namespace' => 'Illuminate\\Support\\Facades\\Cache'],
-            ['name' => 'Session', 'namespace' => 'Illuminate\\Support\\Facades\\Session'],
-            ['name' => 'Validator', 'namespace' => 'Illuminate\\Support\\Facades\\Validator'],
-            ['name' => 'Event', 'namespace' => 'Illuminate\\Support\\Facades\\Event'],
-            ['name' => 'Log', 'namespace' => 'Illuminate\\Support\\Facades\\Log'],
-            ['name' => 'Carbon', 'namespace' => 'Carbon\\Carbon'],
-            ['name' => 'Collection', 'namespace' => 'Illuminate\\Support\\Collection'],
-            ['name' => 'Str', 'namespace' => 'Illuminate\\Support\\Str'],
-            ['name' => 'Arr', 'namespace' => 'Illuminate\\Support\\Arr']
-        ];
-
-        $result = array_merge($result, $laravelClasses);
-
         try {
-            // Scan app/Models directory for model classes
-            $modelsPath = app_path('Models');
-            if (File::isDirectory($modelsPath)) {
-                $modelFiles = File::files($modelsPath);
+            $classes = [];
+            $count = 0;
 
-                foreach ($modelFiles as $file) {
-                    $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                    if ($className && $className !== 'index' && substr($className, 0, 1) !== '.') {
-                        $result[] = [
-                            'name' => $className,
-                            'namespace' => 'App\\Models\\' . $className
-                        ];
-                    }
-                }
+            // إضافة الفئات الشائعة في Laravel
+            $commonClasses = [
+                ['name' => 'User', 'namespace' => 'App\\Models\\User'],
+                ['name' => 'Auth', 'namespace' => 'Illuminate\\Support\\Facades\\Auth'],
+                ['name' => 'DB', 'namespace' => 'Illuminate\\Support\\Facades\\DB'],
+                ['name' => 'Route', 'namespace' => 'Illuminate\\Support\\Facades\\Route'],
+                ['name' => 'Storage', 'namespace' => 'Illuminate\\Support\\Facades\\Storage'],
+                ['name' => 'Hash', 'namespace' => 'Illuminate\\Support\\Facades\\Hash'],
+                ['name' => 'Cache', 'namespace' => 'Illuminate\\Support\\Facades\\Cache'],
+                ['name' => 'Session', 'namespace' => 'Illuminate\\Support\\Facades\\Session'],
+                ['name' => 'Validator', 'namespace' => 'Illuminate\\Support\\Facades\\Validator'],
+                ['name' => 'Carbon', 'namespace' => 'Carbon\\Carbon'],
+                ['name' => 'Str', 'namespace' => 'Illuminate\\Support\\Str'],
+                ['name' => 'Arr', 'namespace' => 'Illuminate\\Support\\Arr'],
+                ['name' => 'Log', 'namespace' => 'Illuminate\\Support\\Facades\\Log'],
+                ['name' => 'File', 'namespace' => 'Illuminate\\Support\\Facades\\File'],
+                ['name' => 'Event', 'namespace' => 'Illuminate\\Support\\Facades\\Event'],
+                ['name' => 'Mail', 'namespace' => 'Illuminate\\Support\\Facades\\Mail'],
+                ['name' => 'Notification', 'namespace' => 'Illuminate\\Support\\Facades\\Notification'],
+                ['name' => 'Queue', 'namespace' => 'Illuminate\\Support\\Facades\\Queue'],
+                ['name' => 'Schema', 'namespace' => 'Illuminate\\Support\\Facades\\Schema'],
+                ['name' => 'URL', 'namespace' => 'Illuminate\\Support\\Facades\\URL'],
+                ['name' => 'Artisan', 'namespace' => 'Illuminate\\Support\\Facades\\Artisan'],
+                ['name' => 'Blade', 'namespace' => 'Illuminate\\Support\\Facades\\Blade'],
+                ['name' => 'Config', 'namespace' => 'Illuminate\\Support\\Facades\\Config'],
+                ['name' => 'Cookie', 'namespace' => 'Illuminate\\Support\\Facades\\Cookie'],
+                ['name' => 'Crypt', 'namespace' => 'Illuminate\\Support\\Facades\\Crypt'],
+                ['name' => 'Date', 'namespace' => 'Illuminate\\Support\\Facades\\Date'],
+                ['name' => 'Http', 'namespace' => 'Illuminate\\Support\\Facades\\Http'],
+                ['name' => 'Password', 'namespace' => 'Illuminate\\Support\\Facades\\Password'],
+                ['name' => 'Redirect', 'namespace' => 'Illuminate\\Support\\Facades\\Redirect'],
+                ['name' => 'Request', 'namespace' => 'Illuminate\\Http\\Request'],
+                ['name' => 'Response', 'namespace' => 'Illuminate\\Http\\Response'],
+                ['name' => 'Collection', 'namespace' => 'Illuminate\\Support\\Collection'],
+                ['name' => 'Job', 'namespace' => 'Illuminate\\Bus\\Queueable'],
+                ['name' => 'Mailable', 'namespace' => 'Illuminate\\Mail\\Mailable'],
+                ['name' => 'Notifiable', 'namespace' => 'Illuminate\\Notifications\\Notifiable'],
+                ['name' => 'ShouldQueue', 'namespace' => 'Illuminate\\Contracts\\Queue\\ShouldQueue'],
+                ['name' => 'Dispatchable', 'namespace' => 'Illuminate\\Foundation\\Bus\\Dispatchable'],
+                ['name' => 'InteractsWithQueue', 'namespace' => 'Illuminate\\Queue\\InteractsWithQueue'],
+                ['name' => 'SerializesModels', 'namespace' => 'Illuminate\\Queue\\SerializesModels']
+            ];
+
+            foreach ($commonClasses as $class) {
+                $classes[] = $class;
+                $count++;
             }
 
-            // Legacy app directory models
-            $legacyModelsPath = app_path();
-            if (File::isDirectory($legacyModelsPath)) {
-                $modelFiles = File::files($legacyModelsPath);
+            // البحث عن النماذج في مجلد app/Models
+            $this->scanDirectory(app_path('Models'), 'App\\Models', $classes, $count);
 
-                foreach ($modelFiles as $file) {
-                    $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                    if ($className && $className !== 'index' &&
-                        !in_array($className, ['User', 'Console', 'Exceptions', 'Http', 'Providers']) &&
-                        substr($className, 0, 1) !== '.' &&
-                        substr($file->getFilename(), -4) === '.php') {
-                        $result[] = [
-                            'name' => $className,
-                            'namespace' => 'App\\' . $className
-                        ];
-                    }
-                }
-            }
+            // البحث عن الوظائف في مجلد app/Jobs
+            $this->scanDirectory(app_path('Jobs'), 'App\\Jobs', $classes, $count);
 
-            // Get all loaded classes
-            $loadedClasses = get_declared_classes();
-            foreach ($loadedClasses as $class) {
-                // Only include App namespace classes
-                if (strpos($class, 'App\\') === 0) {
-                    $parts = explode('\\', $class);
-                    $className = end($parts);
+            // البحث عن الإشعارات في مجلد app/Notifications
+            $this->scanDirectory(app_path('Notifications'), 'App\\Notifications', $classes, $count);
 
-                    // Check if class already exists in result
-                    $exists = false;
-                    foreach ($result as $item) {
-                        if ($item['name'] === $className) {
-                            $exists = true;
-                            break;
-                        }
-                    }
+            // البحث عن التعدادات في مجلد app/Enums
+            $this->scanDirectory(app_path('Enums'), 'App\\Enums', $classes, $count);
 
-                    if (!$exists) {
-                        $result[] = [
-                            'name' => $className,
-                            'namespace' => $class
-                        ];
-                    }
-                }
-            }
+            // البحث عن الأحداث في مجلد app/Events
+            $this->scanDirectory(app_path('Events'), 'App\\Events', $classes, $count);
+
+            // البحث عن المستمعين في مجلد app/Listeners
+            $this->scanDirectory(app_path('Listeners'), 'App\\Listeners', $classes, $count);
+
+            // البحث عن البريد في مجلد app/Mail
+            $this->scanDirectory(app_path('Mail'), 'App\\Mail', $classes, $count);
+
+            // البحث عن السياسات في مجلد app/Policies
+            $this->scanDirectory(app_path('Policies'), 'App\\Policies', $classes, $count);
+
+            // البحث عن القواعد في مجلد app/Rules
+            $this->scanDirectory(app_path('Rules'), 'App\\Rules', $classes, $count);
+
+            // البحث عن الموارد في مجلد app/Http/Resources
+            $this->scanDirectory(app_path('Http/Resources'), 'App\\Http\\Resources', $classes, $count);
+
+            // البحث عن الطلبات في مجلد app/Http/Requests
+            $this->scanDirectory(app_path('Http/Requests'), 'App\\Http\\Requests', $classes, $count);
+
+            // البحث عن المتحكمات في مجلد app/Http/Controllers
+            $this->scanDirectory(app_path('Http/Controllers'), 'App\\Http\\Controllers', $classes, $count);
+
+            // البحث عن الوسطاء في مجلد app/Http/Middleware
+            $this->scanDirectory(app_path('Http/Middleware'), 'App\\Http\\Middleware', $classes, $count);
+
+            // البحث عن مزودي الخدمات في مجلد app/Providers
+            $this->scanDirectory(app_path('Providers'), 'App\\Providers', $classes, $count);
+
+            // إضافة معلومات التصحيح
+            \Log::info('Found ' . $count . ' classes');
+
+            return response()->json([
+                'classes' => $classes,
+                'count' => $count,
+                'app_path' => app_path()
+            ]);
         } catch (\Exception $e) {
-            // Log error but continue with default classes
-            \Log::error('Error scanning for classes: ' . $e->getMessage());
+            \Log::error('Error in getAvailableClasses: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * مسح مجلد بحثًا عن فئات PHP
+     *
+     * @param string $directory المجلد المراد مسحه
+     * @param string $namespace مساحة الاسم الأساسية للمجلد
+     * @param array &$classes مصفوفة الفئات التي سيتم تحديثها
+     * @param int &$count عدد الفئات التي تم العثور عليها
+     * @return void
+     */
+    private function scanDirectory($directory, $namespace, &$classes, &$count)
+    {
+        if (!file_exists($directory)) {
+            \Log::info("Directory does not exist: {$directory}");
+            return;
         }
 
-        return response()->json([
-            'classes' => $result,
-            'count' => count($result),
-            'app_path' => app_path(),
-            'version' => '1.0.1'
-        ]);
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($files as $file) {
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $relativePath = str_replace($directory . '/', '', $file->getPathname());
+                $relativePath = str_replace('.php', '', $relativePath);
+                $relativePath = str_replace('/', '\\', $relativePath);
+
+                $className = basename($file->getPathname(), '.php');
+                $fullNamespace = $namespace . '\\' . $relativePath;
+
+                // تجنب الفئات المكررة
+                if (!$this->classExists($classes, $className)) {
+                    $classes[] = [
+                        'name' => $className,
+                        'namespace' => $fullNamespace
+                    ];
+                    $count++;
+                }
+            }
+        }
+    }
+
+    /**
+     * التحقق مما إذا كانت الفئة موجودة بالفعل في المصفوفة
+     *
+     * @param array $classes مصفوفة الفئات
+     * @param string $className اسم الفئة للبحث عنها
+     * @return bool
+     */
+    private function classExists($classes, $className)
+    {
+        foreach ($classes as $class) {
+            if ($class['name'] === $className) {
+                return true;
+            }
+        }
+        return false;
     }
 }

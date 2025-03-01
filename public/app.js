@@ -2161,7 +2161,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         setDefaultClasses: function setDefaultClasses() {
             // Fallback classes if API fails
-            this.phpClasses = [{ name: 'User', namespace: 'App\\Models\\User' }, { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' }, { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' }, { name: 'Route', namespace: 'Illuminate\\Support\\Facades\\Route' }, { name: 'Storage', namespace: 'Illuminate\\Support\\Facades\\Storage' }, { name: 'Hash', namespace: 'Illuminate\\Support\\Facades\\Hash' }, { name: 'Cache', namespace: 'Illuminate\\Support\\Facades\\Cache' }, { name: 'Session', namespace: 'Illuminate\\Support\\Facades\\Session' }, { name: 'Validator', namespace: 'Illuminate\\Support\\Facades\\Validator' }, { name: 'Carbon', namespace: 'Carbon\\Carbon' }, { name: 'Str', namespace: 'Illuminate\\Support\\Str' }, { name: 'Arr', namespace: 'Illuminate\\Support\\Arr' }];
+            this.phpClasses = [{ name: 'User', namespace: 'App\\Models\\User' }, { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' }, { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' }, { name: 'Route', namespace: 'Illuminate\\Support\\Facades\\Route' }, { name: 'Storage', namespace: 'Illuminate\\Support\\Facades\\Storage' }, { name: 'Hash', namespace: 'Illuminate\\Support\\Facades\\Hash' }, { name: 'Cache', namespace: 'Illuminate\\Support\\Facades\\Cache' }, { name: 'Session', namespace: 'Illuminate\\Support\\Facades\\Session' }, { name: 'Validator', namespace: 'Illuminate\\Support\\Facades\\Validator' }, { name: 'Carbon', namespace: 'Carbon\\Carbon' }, { name: 'Str', namespace: 'Illuminate\\Support\\Str' }, { name: 'Arr', namespace: 'Illuminate\\Support\\Arr' },
+            // إضافة فئات افتراضية للوظائف والإشعارات والتعدادات
+            { name: 'Job', namespace: 'Illuminate\\Bus\\Queueable' }, { name: 'Notification', namespace: 'Illuminate\\Support\\Facades\\Notification' }, { name: 'Dispatchable', namespace: 'Illuminate\\Foundation\\Bus\\Dispatchable' }, { name: 'InteractsWithQueue', namespace: 'Illuminate\\Queue\\InteractsWithQueue' }, { name: 'SerializesModels', namespace: 'Illuminate\\Queue\\SerializesModels' }, { name: 'ShouldQueue', namespace: 'Illuminate\\Contracts\\Queue\\ShouldQueue' }, { name: 'Mailable', namespace: 'Illuminate\\Mail\\Mailable' }, { name: 'Notifiable', namespace: 'Illuminate\\Notifications\\Notifiable' }];
         },
         executeCode: function executeCode() {
             var _this3 = this;
@@ -2368,18 +2370,40 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         },
         addImport: function addImport(editor, classInfo) {
-            // Check if we already imported this class
-            if (this.importedClasses.has(classInfo.name)) {
+            // تحويل classInfo إلى تنسيق موحد
+            var className = void 0,
+                namespace = void 0;
+
+            if (typeof classInfo === 'string') {
+                className = classInfo;
+                // محاولة العثور على مساحة الاسم من قائمة الفئات
+                var fullClassInfo = this.phpClasses.find(function (cls) {
+                    return typeof cls !== 'string' && cls.name === classInfo;
+                });
+
+                if (fullClassInfo) {
+                    namespace = fullClassInfo.namespace;
+                } else {
+                    // إذا لم يتم العثور على مساحة الاسم، استخدم الاسم كمساحة اسم افتراضية
+                    namespace = 'App\\Models\\' + classInfo;
+                }
+            } else {
+                className = classInfo.name;
+                namespace = classInfo.namespace;
+            }
+
+            // التحقق مما إذا كنا قد استوردنا هذه الفئة بالفعل
+            if (this.importedClasses.has(className)) {
                 return;
             }
 
-            // Add to imported classes set
-            this.importedClasses.add(classInfo.name);
+            // إضافة إلى مجموعة الفئات المستوردة
+            this.importedClasses.add(className);
 
-            // Find where to insert the import
-            var importStatement = 'use ' + classInfo.namespace + ';';
+            // العثور على المكان المناسب لإدراج الاستيراد
+            var importStatement = 'use ' + namespace + ';';
 
-            // Check if there are already imports
+            // التحقق مما إذا كانت هناك استيرادات بالفعل
             var hasImports = false;
             var lastImportLine = 0;
 
@@ -2392,14 +2416,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
 
             if (hasImports) {
-                // Insert after the last import
+                // إدراج بعد آخر استيراد
                 editor.replaceRange(importStatement + '\n', { line: lastImportLine + 1, ch: 0 }, { line: lastImportLine + 1, ch: 0 });
                 this.lastImportLine = lastImportLine + 1;
             } else {
-                // Insert at the beginning of the file
+                // إدراج في بداية الملف
                 editor.replaceRange(importStatement + '\n\n', { line: 0, ch: 0 }, { line: 0, ch: 0 });
                 this.lastImportLine = 0;
             }
+
+            // إظهار إشعار بالاستيراد
+            this.showImportNotification(className, namespace);
         },
 
 
@@ -2425,16 +2452,53 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             // يبحث عن الكلمات التي تبدأ بحرف كبير وتتبعها أحرف صغيرة أو أرقام أو _
             var classNameRegex = /\b([A-Z][a-zA-Z0-9_]*)\b/g;
 
+            // تعبير منتظم للبحث عن استخدامات الفئات مع ::
+            var staticUsageRegex = /\b([A-Z][a-zA-Z0-9_]*)::/g;
+
             // الحصول على جميع أسماء الفئات المحتملة
-            var matches = code.match(classNameRegex) || [];
-            var uniqueClassNames = [].concat(_toConsumableArray(new Set(matches))); // إزالة التكرارات
+            var matches = [];
+
+            // البحث عن الفئات المستخدمة بشكل عادي
+            var normalMatches = code.match(classNameRegex) || [];
+            matches = matches.concat(normalMatches);
+
+            // البحث عن الفئات المستخدمة مع ::
+            var staticMatch = void 0;
+            while ((staticMatch = staticUsageRegex.exec(code)) !== null) {
+                if (staticMatch[1]) {
+                    matches.push(staticMatch[1]);
+                }
+            }
+
+            // إزالة التكرارات
+            var uniqueClassNames = [].concat(_toConsumableArray(new Set(matches)));
 
             console.log('Found potential class names:', uniqueClassNames);
+
+            // قائمة بالفئات المعروفة التي نريد استيرادها دائمًا إذا وجدت في الكود
+            var knownClasses = [{ name: 'User', namespace: 'App\\Models\\User' }, { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' }, { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' }, { name: 'Route', namespace: 'Illuminate\\Support\\Facades\\Route' }, { name: 'Storage', namespace: 'Illuminate\\Support\\Facades\\Storage' }, { name: 'Hash', namespace: 'Illuminate\\Support\\Facades\\Hash' }, { name: 'Cache', namespace: 'Illuminate\\Support\\Facades\\Cache' }, { name: 'Session', namespace: 'Illuminate\\Support\\Facades\\Session' }, { name: 'Validator', namespace: 'Illuminate\\Support\\Facades\\Validator' }, { name: 'Carbon', namespace: 'Carbon\\Carbon' }, { name: 'Str', namespace: 'Illuminate\\Support\\Str' }, { name: 'Arr', namespace: 'Illuminate\\Support\\Arr' }, { name: 'Log', namespace: 'Illuminate\\Support\\Facades\\Log' }, { name: 'File', namespace: 'Illuminate\\Support\\Facades\\File' }, { name: 'Event', namespace: 'Illuminate\\Support\\Facades\\Event' }, { name: 'Mail', namespace: 'Illuminate\\Support\\Facades\\Mail' }, { name: 'Notification', namespace: 'Illuminate\\Support\\Facades\\Notification' }, { name: 'Queue', namespace: 'Illuminate\\Support\\Facades\\Queue' }, { name: 'Schema', namespace: 'Illuminate\\Support\\Facades\\Schema' }, { name: 'URL', namespace: 'Illuminate\\Support\\Facades\\URL' }, { name: 'Artisan', namespace: 'Illuminate\\Support\\Facades\\Artisan' }, { name: 'Blade', namespace: 'Illuminate\\Support\\Facades\\Blade' }, { name: 'Config', namespace: 'Illuminate\\Support\\Facades\\Config' }, { name: 'Cookie', namespace: 'Illuminate\\Support\\Facades\\Cookie' }, { name: 'Crypt', namespace: 'Illuminate\\Support\\Facades\\Crypt' }, { name: 'Date', namespace: 'Illuminate\\Support\\Facades\\Date' }, { name: 'Http', namespace: 'Illuminate\\Support\\Facades\\Http' }, { name: 'Password', namespace: 'Illuminate\\Support\\Facades\\Password' }, { name: 'Redirect', namespace: 'Illuminate\\Support\\Facades\\Redirect' }, { name: 'Request', namespace: 'Illuminate\\Http\\Request' }, { name: 'Response', namespace: 'Illuminate\\Http\\Response' }, { name: 'Collection', namespace: 'Illuminate\\Support\\Collection' },
+            // إضافة فئات Laravel الشائعة الأخرى
+            { name: 'Job', namespace: 'Illuminate\\Bus\\Queueable' }, { name: 'Mailable', namespace: 'Illuminate\\Mail\\Mailable' }, { name: 'Notifiable', namespace: 'Illuminate\\Notifications\\Notifiable' }, { name: 'Enum', namespace: 'App\\Enums\\' }, { name: 'ShouldQueue', namespace: 'Illuminate\\Contracts\\Queue\\ShouldQueue' }, { name: 'Dispatchable', namespace: 'Illuminate\\Foundation\\Bus\\Dispatchable' }, { name: 'InteractsWithQueue', namespace: 'Illuminate\\Queue\\InteractsWithQueue' }, { name: 'SerializesModels', namespace: 'Illuminate\\Queue\\SerializesModels' }];
 
             // التحقق من كل اسم فئة محتمل
             uniqueClassNames.forEach(function (className) {
                 // تجاهل الكلمات المحجوزة في PHP
-                if (['Class', 'Interface', 'Trait', 'Function', 'Array', 'String', 'Int', 'Float', 'Bool', 'True', 'False', 'Null'].includes(className)) {
+                if (['Class', 'Interface', 'Trait', 'Function', 'Array', 'String', 'Int', 'Float', 'Bool', 'True', 'False', 'Null', 'Self', 'Parent', 'Static', 'Public', 'Private', 'Protected', 'Final', 'Abstract', 'Extends', 'Implements'].includes(className)) {
+                    return;
+                }
+
+                // البحث أولاً في قائمة الفئات المعروفة
+                var knownClass = knownClasses.find(function (cls) {
+                    return cls.name === className;
+                });
+                if (knownClass) {
+                    console.log('Found known class to import:', className);
+
+                    // التحقق مما إذا كانت الفئة مستوردة بالفعل
+                    if (!_this5.hasImportForClass(editor, knownClass)) {
+                        // استيراد الفئة
+                        _this5.addImport(editor, knownClass);
+                    }
                     return;
                 }
 
@@ -2451,8 +2515,131 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         // استيراد الفئة
                         _this5.addImport(editor, classInfo);
                     }
+                } else {
+                    // محاولة تخمين مساحة الاسم بناءً على الاتفاقيات الشائعة في Laravel
+                    _this5.guessAndImportNamespace(editor, className);
                 }
             });
+
+            // البحث عن استخدامات محددة في الكود
+            this.checkForSpecificUsages(editor, code);
+        },
+
+
+        // دالة جديدة لتخمين مساحة الاسم بناءً على اسم الفئة
+        guessAndImportNamespace: function guessAndImportNamespace(editor, className) {
+            // قائمة بالمسارات المحتملة للفئات في Laravel
+            var possiblePaths = [{ suffix: 'Job', namespace: 'App\\Jobs\\' + className }, { suffix: 'Notification', namespace: 'App\\Notifications\\' + className }, { suffix: 'Mail', namespace: 'App\\Mail\\' + className }, { suffix: 'Event', namespace: 'App\\Events\\' + className }, { suffix: 'Listener', namespace: 'App\\Listeners\\' + className }, { suffix: 'Policy', namespace: 'App\\Policies\\' + className }, { suffix: 'Rule', namespace: 'App\\Rules\\' + className }, { suffix: 'Resource', namespace: 'App\\Http\\Resources\\' + className }, { suffix: 'Request', namespace: 'App\\Http\\Requests\\' + className }, { suffix: 'Controller', namespace: 'App\\Http\\Controllers\\' + className }, { suffix: 'Middleware', namespace: 'App\\Http\\Middleware\\' + className }, { suffix: 'Provider', namespace: 'App\\Providers\\' + className }, { suffix: 'Enum', namespace: 'App\\Enums\\' + className }];
+
+            // التحقق مما إذا كان اسم الفئة ينتهي بأحد اللواحق المعروفة
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = possiblePaths[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var path = _step.value;
+
+                    if (className.endsWith(path.suffix)) {
+                        var classInfo = { name: className, namespace: path.namespace };
+                        console.log('Guessing namespace for:', className, path.namespace);
+
+                        // التحقق مما إذا كانت الفئة مستوردة بالفعل
+                        if (!this.hasImportForClass(editor, classInfo)) {
+                            // استيراد الفئة
+                            this.addImport(editor, classInfo);
+                        }
+                        return;
+                    }
+                }
+
+                // إذا لم يكن هناك لاحقة معروفة، نفترض أنها قد تكون نموذجًا
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            var modelInfo = { name: className, namespace: 'App\\Models\\' + className };
+            console.log('Assuming model namespace for:', className);
+
+            // التحقق مما إذا كانت الفئة مستوردة بالفعل
+            if (!this.hasImportForClass(editor, modelInfo)) {
+                // استيراد الفئة
+                this.addImport(editor, modelInfo);
+            }
+        },
+
+
+        // دالة جديدة للبحث عن استخدامات محددة في الكود
+        checkForSpecificUsages: function checkForSpecificUsages(editor, code) {
+            // البحث عن استخدام Carbon
+            if (code.includes('Carbon') || code.includes('now()') || code.includes('today()') || code.includes('yesterday()') || code.includes('tomorrow()')) {
+                var carbonClass = { name: 'Carbon', namespace: 'Carbon\\Carbon' };
+                if (!this.hasImportForClass(editor, carbonClass)) {
+                    this.addImport(editor, carbonClass);
+                }
+            }
+
+            // البحث عن استخدام DB
+            if (code.includes('DB::') || code.includes('table(') || code.includes('select(') || code.includes('where(') || code.includes('join(')) {
+                var dbClass = { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' };
+                if (!this.hasImportForClass(editor, dbClass)) {
+                    this.addImport(editor, dbClass);
+                }
+            }
+
+            // البحث عن استخدام Auth
+            if (code.includes('Auth::') || code.includes('auth()->') || code.includes('user()') || code.includes('check()') || code.includes('attempt(')) {
+                var authClass = { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' };
+                if (!this.hasImportForClass(editor, authClass)) {
+                    this.addImport(editor, authClass);
+                }
+            }
+
+            // البحث عن استخدام Str
+            if (code.includes('Str::') || code.includes('str_') || code.includes('->str') || code.includes('string manipulation')) {
+                var strClass = { name: 'Str', namespace: 'Illuminate\\Support\\Str' };
+                if (!this.hasImportForClass(editor, strClass)) {
+                    this.addImport(editor, strClass);
+                }
+            }
+
+            // البحث عن استخدام وظائف الوظائف (Jobs)
+            if (code.includes('dispatch(') || code.includes('dispatchNow(') || code.includes('dispatchSync(') || code.includes('dispatchAfter(')) {
+                var jobClass = { name: 'Job', namespace: 'Illuminate\\Bus\\Queueable' };
+                if (!this.hasImportForClass(editor, jobClass)) {
+                    this.addImport(editor, jobClass);
+                }
+
+                var dispatchableClass = { name: 'Dispatchable', namespace: 'Illuminate\\Foundation\\Bus\\Dispatchable' };
+                if (!this.hasImportForClass(editor, dispatchableClass)) {
+                    this.addImport(editor, dispatchableClass);
+                }
+            }
+
+            // البحث عن استخدام الإشعارات (Notifications)
+            if (code.includes('notify(') || code.includes('notification') || code.includes('Notification::')) {
+                var notificationClass = { name: 'Notification', namespace: 'Illuminate\\Support\\Facades\\Notification' };
+                if (!this.hasImportForClass(editor, notificationClass)) {
+                    this.addImport(editor, notificationClass);
+                }
+            }
+
+            // البحث عن استخدام التعدادات (Enums)
+            if (code.includes('enum ') || code.includes('->value') || code.includes('::cases()')) {
+                // لا نستطيع استيراد تعداد محدد هنا لأننا لا نعرف اسمه، ولكن يمكننا إضافة تعليق مفيد
+                console.log('Enum usage detected. Consider importing specific enum classes.');
+            }
         },
 
 
