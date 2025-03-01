@@ -3,13 +3,14 @@
         <div class="tinker__status" v-if="isLoading">
             <span class="tinker__status-text">Loading classes...</span>
         </div>
-        <div class="split-view">
+        <div class="split-view" :style="gridStyle">
             <TinkerInput
                 :path="path"
                 @execute="executeCode"
                 ref="tinkerInput"
                 @loading-status="updateLoadingStatus"
             />
+            <div class="gutter" ref="gutter"></div>
             <div class="output" v-html="output"></div>
         </div>
     </div>
@@ -53,14 +54,8 @@ export default {
         },
 
         gridStyle() {
-            if (this.needsColumnLayout) {
-                return {
-                    gridTemplateColumns: `${this.columnPercentage} ${this.gutterWidth}px ${this.columnPercentage}`,
-                };
-            }
-
             return {
-                gridTemplateRows: `${this.rowPercentage} ${this.gutterWidth}px ${this.rowPercentage}`,
+                gridTemplateColumns: `1fr ${this.gutterWidth}px 1fr`,
             };
         },
     },
@@ -78,7 +73,7 @@ export default {
             this.destroySplit();
 
             this.split = Split({
-                [this.needsColumnLayout ? 'columnGutters' : 'rowGutters']: [
+                columnGutters: [
                     {
                         track: 1,
                         element: this.$refs.gutter,
@@ -106,3 +101,77 @@ export default {
     },
 };
 </script>
+
+<style>
+.tinker {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.tinker__status {
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.tinker__status-text {
+    display: inline-block;
+    margin-left: 0.5rem;
+}
+
+.split-view {
+    flex: 1;
+    display: grid;
+    height: calc(100vh - 2rem);
+}
+
+.input, .output {
+    overflow: auto;
+    height: 100%;
+}
+
+.input {
+    position: relative;
+}
+
+.output {
+    padding: 1rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    background-color: #1a202c;
+    color: #e2e8f0;
+}
+
+.gutter {
+    background-color: #e2e8f0;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter:hover {
+    background-color: #cbd5e0;
+}
+
+.gutter.gutter-horizontal {
+    cursor: col-resize;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+}
+
+.gutter.gutter-vertical {
+    cursor: row-resize;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+}
+
+.text-dimmed {
+    color: #a0aec0;
+}
+
+.error {
+    color: #f56565;
+}
+</style>
