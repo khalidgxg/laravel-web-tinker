@@ -246,15 +246,9 @@ export default {
             // Create a marker to show the import suggestion
             const marker = document.createElement('div');
             marker.className = 'import-suggestion';
-            marker.style.position = 'absolute';
-            marker.style.backgroundColor = '#f0f0f0';
-            marker.style.border = '1px solid #ccc';
-            marker.style.borderRadius = '3px';
-            marker.style.padding = '5px 10px';
-            marker.style.fontSize = '12px';
-            marker.style.zIndex = '1000';
-            marker.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-            marker.innerHTML = `<span style="margin-right: 10px;">Import ${classInfo.namespace}?</span> <button class="import-btn" style="background: #4CAF50; color: white; border: none; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 12px;">Import</button>`;
+
+            // Use the existing CSS class instead of inline styles
+            marker.innerHTML = `<span>Import ${classInfo.namespace}?</span> <button class="import-btn">Import</button>`;
 
             // Add the marker to the editor
             const coords = editor.cursorCoords(true, 'page');

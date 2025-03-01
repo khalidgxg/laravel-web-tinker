@@ -2162,9 +2162,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var cursor = editor.getCursor();
             var token = editor.getTokenAt(cursor);
 
+            console.log('Checking for class import:', token);
+
             // Check if we just typed a class name
             if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
                 var className = token.string;
+                console.log('Found potential class name:', className);
 
                 // Find if this is a known class that needs import
                 var classInfo = this.phpClasses.find(function (cls) {
@@ -2172,6 +2175,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 });
 
                 if (classInfo && !this.importedClasses.has(className)) {
+                    console.log('Class needs import:', classInfo);
                     // Show import suggestion
                     this.showImportSuggestion(editor, classInfo);
                 }
@@ -2180,13 +2184,20 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         showImportSuggestion: function showImportSuggestion(editor, classInfo) {
             var _this4 = this;
 
+            console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
+
             // Create a marker to show the import suggestion
             var marker = document.createElement('div');
             marker.className = 'import-suggestion';
+
+            // Use the existing CSS class instead of inline styles
             marker.innerHTML = '<span>Import ' + classInfo.namespace + '?</span> <button class="import-btn">Import</button>';
 
             // Add the marker to the editor
-            editor.addWidget(editor.getCursor(), marker, false);
+            var coords = editor.cursorCoords(true, 'page');
+            marker.style.top = coords.top + 20 + 'px';
+            marker.style.left = coords.left + 'px';
+            document.body.appendChild(marker);
 
             // Add event listener to the import button
             var importBtn = marker.querySelector('.import-btn');
