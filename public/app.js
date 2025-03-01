@@ -2062,8 +2062,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         });
 
         this.codeEditor.on('keyup', function (editor, event) {
-            if (!editor.state.completionActive && /[a-zA-Z$_:>]/.test(String.fromCharCode(event.keyCode))) {
-                _this.showHints(editor);
+            // تحسين استجابة الاقتراحات عند الكتابة
+            var keyCode = event.keyCode;
+            if (!editor.state.completionActive && (keyCode === 190 || // النقطة
+            keyCode === 186 || // النقطتان
+            keyCode >= 65 && keyCode <= 90 || // الحروف
+            keyCode >= 97 && keyCode <= 122)) {
+                // الحروف
+
+                __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.commands.autocomplete(editor, null, { completeSingle: false });
             }
         });
 
@@ -2081,6 +2088,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         var style = document.createElement('style');
         style.textContent = '\n            .CodeMirror-hints {\n                position: absolute;\n                z-index: 10;\n                overflow: hidden;\n                list-style: none;\n                margin: 0;\n                padding: 2px;\n                border-radius: 4px;\n                border: 1px solid #ddd;\n                background: #232836;\n                box-shadow: 0 4px 8px rgba(0,0,0,0.3);\n                max-height: 20em;\n                overflow-y: auto;\n                font-family: monospace;\n                font-size: 14px;\n            }\n\n            .CodeMirror-hint {\n                margin: 0;\n                padding: 4px 8px;\n                border-radius: 2px;\n                white-space: pre;\n                color: #e6e6e6;\n                cursor: pointer;\n            }\n\n            li.CodeMirror-hint-active {\n                background-color: #4d78cc;\n                color: white;\n            }\n\n            .CodeMirror-hint-class {\n                color: #4EC9B0;\n            }\n\n            .CodeMirror-hint-method {\n                color: #DCDCAA;\n            }\n\n            .CodeMirror-hint-property {\n                color: #9CDCFE;\n            }\n\n            .CodeMirror-hint-variable {\n                color: #9CDCFE;\n            }\n\n            .CodeMirror-hint-function {\n                color: #DCDCAA;\n            }\n\n            .CodeMirror-hint-keyword {\n                color: #569CD6;\n            }\n        ';
         document.head.appendChild(style);
+
+        // تسجيل دالة الاقتراحات المخصصة
+        __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.registerHelper('hint', 'anyword', function (editor, options) {
+            return _this.showHints(editor, options);
+        });
     },
 
 
@@ -2144,7 +2156,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             });
         },
         showHints: function showHints(cm, options) {
-            console.log('showHints called with options:', options);
+            console.log('showHints called');
 
             var cursor = cm.getCursor();
             var token = cm.getTokenAt(cursor);
@@ -2154,39 +2166,67 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             console.log('Current token:', token);
             console.log('Current line:', line);
 
-            // تحليل السياق لتحديد نوع الاقتراحات المناسبة
-            var context = this.analyzeContext(cm, cursor, line, token);
-            console.log('Context analysis result:', context);
-
+            // إنشاء قائمة الاقتراحات
             var list = [];
 
-            if (context.type === 'static-method' && context.class) {
-                // اقتراحات للطرق الثابتة للفئة
-                list = this.getStaticMethodSuggestions(context.class);
-            } else if (context.type === 'method' && context.variable) {
-                // اقتراحات للطرق على متغير
-                var varType = this.determineVariableType(cm, context.variable);
-                list = this.getMethodSuggestions(varType);
-            } else if (context.type === 'class') {
-                // اقتراحات للفئات
-                list = this.phpClasses.map(function (cls) {
-                    return {
+            // إضافة اقتراحات الفئات
+            this.phpClasses.forEach(function (cls) {
+                if (typeof cls === 'string') {
+                    list.push({
                         text: cls,
                         displayText: cls,
-                        className: 'CodeMirror-hint-class',
+                        className: 'hint-class',
                         type: 'class'
-                    };
+                    });
+                } else if (cls.name) {
+                    list.push({
+                        text: cls.name,
+                        displayText: cls.name,
+                        className: 'hint-class',
+                        type: 'class'
+                    });
+                }
+            });
+
+            // إضافة الكلمات المفتاحية والدوال
+            this.phpKeywords.forEach(function (keyword) {
+                list.push({
+                    text: keyword,
+                    displayText: keyword,
+                    className: 'hint-keyword',
+                    type: 'keyword'
                 });
-            } else if (context.type === 'variable') {
-                // اقتراحات للمتغيرات
-                list = this.getVariableSuggestions();
-            } else if (context.type === 'function') {
-                // اقتراحات للدوال
-                list = this.getFunctionSuggestions();
-            } else {
-                // اقتراحات عامة
-                list = this.getGeneralSuggestions();
-            }
+            });
+
+            // إضافة اقتراحات النماذج
+            this.contextualSuggestions.model.forEach(function (method) {
+                list.push({
+                    text: method,
+                    displayText: method,
+                    className: 'hint-model',
+                    type: 'model'
+                });
+            });
+
+            // إضافة اقتراحات قاعدة البيانات
+            this.contextualSuggestions.db.forEach(function (method) {
+                list.push({
+                    text: method,
+                    displayText: method,
+                    className: 'hint-db',
+                    type: 'db'
+                });
+            });
+
+            // إضافة اقتراحات المجموعات
+            this.contextualSuggestions.collection.forEach(function (method) {
+                list.push({
+                    text: method,
+                    displayText: method,
+                    className: 'hint-collection',
+                    type: 'collection'
+                });
+            });
 
             // تصفية الاقتراحات بناءً على الكلمة الحالية
             if (currentWord && currentWord !== '::' && currentWord !== '->') {
@@ -2195,18 +2235,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 });
             }
 
-            console.log('Filtered suggestions list:', list);
-
-            if (list.length === 0) {
-                console.log('No suggestions available, falling back to default suggestions');
-                list = this.getGeneralSuggestions();
-
-                if (currentWord && currentWord !== '::' && currentWord !== '->') {
-                    list = list.filter(function (item) {
-                        return item.text.toLowerCase().startsWith(currentWord.toLowerCase());
-                    });
-                }
-            }
+            console.log('Suggestions list:', list.length, 'items');
 
             return {
                 list: list,
@@ -2214,58 +2243,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 to: { line: cursor.line, ch: token.end }
             };
         },
-        analyzeContext: function analyzeContext(cm, cursor, line, token) {
-            console.log('Analyzing context at cursor:', cursor);
-            console.log('Token:', token);
-
-            // تحقق من وجود :: قبل الموضع الحالي (للطرق الثابتة)
-            var staticMethodMatch = line.substring(0, cursor.ch).match(/(\w+)::(\w*)$/);
-            if (staticMethodMatch) {
-                console.log('Static method context detected:', staticMethodMatch[1]);
-                return {
-                    type: 'static-method',
-                    class: staticMethodMatch[1],
-                    prefix: staticMethodMatch[2]
-                };
-            }
-
-            // تحقق من وجود -> قبل الموضع الحالي (للطرق)
-            var methodMatch = line.substring(0, cursor.ch).match(/(\$\w+)->(\w*)$/);
-            if (methodMatch) {
-                console.log('Method context detected for variable:', methodMatch[1]);
-                return {
-                    type: 'method',
-                    variable: methodMatch[1],
-                    prefix: methodMatch[2]
-                };
-            }
-
-            // تحقق مما إذا كان المستخدم يكتب اسم فئة
-            if (token.type === 'variable-2' || token.string.match(/^[A-Z]\w*$/)) {
-                console.log('Class name context detected');
-                return {
-                    type: 'class',
-                    prefix: token.string
-                };
-            }
-
-            // تحقق مما إذا كان المستخدم يكتب متغيرًا
-            if (token.string.startsWith('$')) {
-                console.log('Variable context detected');
-                return {
-                    type: 'variable',
-                    prefix: token.string
-                };
-            }
-
-            // السياق الافتراضي
-            console.log('Default/general context');
-            return {
-                type: 'general',
-                prefix: token.string
-            };
-        },
-        autoShowHints: function autoShowHints(cm, changes) {
+        autoShowHints: function autoShowHints(cm) {
             var _this4 = this;
 
             var cursor = cm.getCursor();
@@ -2279,20 +2257,16 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             if (staticMethodTrigger || methodTrigger) {
                 console.log('Trigger detected:', staticMethodTrigger ? '::' : '->');
                 setTimeout(function () {
-                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4), {
-                        completeSingle: false,
-                        trigger: staticMethodTrigger ? '::' : '->'
-                    });
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.hint.anyword);
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4));
                 }, 100);
                 return;
             }
 
             // إظهار الاقتراحات عند كتابة حرف جديد إذا كان هناك على الأقل حرفين
-            if (token.type === 'variable-2' || token.string.match(/^\w{2,}$/)) {
+            if (token.string.match(/^\w{2,}$/)) {
                 setTimeout(function () {
-                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4), {
-                        completeSingle: false
-                    });
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4));
                 }, 100);
             }
         },
