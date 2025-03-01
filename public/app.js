@@ -2146,27 +2146,69 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var end = cursor.ch;
             var currentWord = line.slice(start, end).toLowerCase();
 
-            // تحليل السياق الحالي للحصول على اقتراحات أكثر دقة
+            console.log('Current word:', currentWord);
+            console.log('Token:', token);
+
+            // تحليل السياق الحالي
             var context = this.analyzeContext(editor);
-            var suggestions = [];
+            console.log('Context:', context);
 
-            if (context.type) {
-                // إذا كان هناك سياق محدد، استخدم الاقتراحات المناسبة له
-                var contextSuggestions = this.contextualSuggestions[context.type] || [];
+            var list = [];
 
-                // إضافة اقتراحات السياق فقط (بدون إضافة اقتراحات عامة)
-                contextSuggestions.forEach(function (suggestion) {
-                    suggestions.push({
-                        text: suggestion,
-                        displayText: suggestion,
-                        className: 'hint-' + context.type,
+            // إذا كان هناك سياق محدد (مثل User:: أو DB::)
+            if (context.type === 'model') {
+                // اقتراحات خاصة بالنماذج
+                list = this.contextualSuggestions.model.map(function (item) {
+                    return {
+                        text: item,
+                        displayText: item,
+                        className: 'hint-model',
                         render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-' + context.type + '">' + data.displayText + '</span>';
+                            element.innerHTML = '<span class="hint-model">' + data.displayText + '</span>';
+                        }
+                    };
+                });
+                console.log('Showing model suggestions:', list.length);
+            } else if (context.type === 'db') {
+                // اقتراحات خاصة بقاعدة البيانات
+                list = this.contextualSuggestions.db.map(function (item) {
+                    return {
+                        text: item,
+                        displayText: item,
+                        className: 'hint-db',
+                        render: function render(element, self, data) {
+                            element.innerHTML = '<span class="hint-db">' + data.displayText + '</span>';
+                        }
+                    };
+                });
+                console.log('Showing DB suggestions:', list.length);
+            } else if (context.type === 'collection') {
+                // اقتراحات خاصة بالمجموعات
+                list = this.contextualSuggestions.collection.map(function (item) {
+                    return {
+                        text: item,
+                        displayText: item,
+                        className: 'hint-collection',
+                        render: function render(element, self, data) {
+                            element.innerHTML = '<span class="hint-collection">' + data.displayText + '</span>';
+                        }
+                    };
+                });
+                console.log('Showing collection suggestions:', list.length);
+            } else {
+                // اقتراحات عامة (فقط إذا لم يكن هناك سياق محدد)
+
+                // إضافة الفئات
+                this.phpClasses.forEach(function (cls) {
+                    list.push({
+                        text: cls.name,
+                        displayText: cls.name,
+                        className: 'hint-class',
+                        render: function render(element, self, data) {
+                            element.innerHTML = '<span class="hint-class">' + data.displayText + '</span>';
                         }
                     });
                 });
-            } else {
-                // إذا لم يكن هناك سياق محدد، استخدم الاقتراحات العامة
 
                 // إضافة الكلمات المفتاحية
                 this.phpKeywords.forEach(function (keyword) {
@@ -2179,7 +2221,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                         type = 'db';
                     }
 
-                    suggestions.push({
+                    list.push({
                         text: keyword,
                         displayText: keyword,
                         className: 'hint-' + type,
@@ -2189,36 +2231,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     });
                 });
 
-                // إضافة الفئات
-                this.phpClasses.forEach(function (cls) {
-                    suggestions.push({
-                        text: cls.name,
-                        displayText: cls.name,
-                        className: 'hint-class',
-                        render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-class">' + data.displayText + '</span>';
-                        }
-                    });
-                });
+                console.log('Showing general suggestions:', list.length);
             }
 
             // تصفية الاقتراحات بناءً على الكلمة الحالية
-            var filteredList = suggestions.filter(function (item) {
-                return item.text.toLowerCase().includes(currentWord);
-            });
+            if (currentWord) {
+                list = list.filter(function (item) {
+                    return item.text.toLowerCase().includes(currentWord);
+                });
+                console.log('Filtered suggestions:', list.length);
+            }
 
-            // ترتيب الاقتراحات
-            filteredList.sort(function (a, b) {
-                // ترتيب أبجدي ضمن نفس النوع
-                return a.text.localeCompare(b.text);
-            });
-
-            if (filteredList.length > 0) {
+            // عرض الاقتراحات فقط إذا كان هناك اقتراحات
+            if (list.length > 0) {
                 editor.showHint({
                     completeSingle: false,
                     hint: function hint() {
                         return {
-                            list: filteredList,
+                            list: list,
                             from: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, start),
                             to: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, end)
                         };
@@ -2236,12 +2266,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
             console.log('Analyzing context for line:', lineUntilCursor);
 
-            // البحث عن نمط "->", "::" أو "."
-            var arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
+            // البحث عن نمط "::" (مثل User::)
             var staticMatch = lineUntilCursor.match(/(\w+)\s*::$/);
-            var dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
-
-            // تحقق من وجود نمط "Model::" (مثل User::)
             if (staticMatch) {
                 var className = staticMatch[1];
                 console.log('Found static match:', className);
@@ -2255,20 +2281,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                 // تحقق مما إذا كان اسم فئة (يبدأ بحرف كبير)
                 if (/^[A-Z]/.test(className)) {
-                    // تحقق مما إذا كان نموذجًا (Model)
-                    var classInfo = this.phpClasses.find(function (cls) {
-                        return cls.name === className;
-                    });
-                    if (classInfo && classInfo.namespace.includes('\\Models\\')) {
-                        console.log('Detected model class:', className);
-                        return { type: 'model', objectName: className };
-                    }
-                    console.log('Detected class (treating as model):', className);
+                    console.log('Detected model class:', className);
                     return { type: 'model', objectName: className };
                 }
             }
 
-            // تحقق من وجود نمط "->method" (مثل $users->)
+            // البحث عن نمط "->" (مثل $users->)
+            var arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
             if (arrowMatch) {
                 var variableName = arrowMatch[1];
                 console.log('Found arrow match:', variableName);
@@ -2279,7 +2298,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 return { type: contextType, objectName: variableName };
             }
 
-            // تحقق من وجود نمط "." (للسلاسل النصية أو المصفوفات)
+            // البحث عن نمط "." (مثل $array.)
+            var dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
             if (dotMatch) {
                 console.log('Found dot match:', dotMatch[1]);
                 return { type: 'collection', objectName: dotMatch[1] };
@@ -2297,7 +2317,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var content = editor.getValue();
 
             // تنظيف اسم المتغير (إزالة $ إذا كان موجودًا)
-            var cleanVarName = variableName.replace('$', '');
+            var cleanVarName = variableName.replace(/^\$/, '');
+
+            console.log('Determining type for variable:', cleanVarName);
 
             // تحقق مما إذا كان المتغير هو نتيجة استدعاء نموذج
             var modelPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::(all|get|find|where|first)', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::where', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->where', 'i')];
@@ -2311,6 +2333,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     var pattern = _step.value;
 
                     if (pattern.test(content)) {
+                        console.log('Variable is a collection (from model)');
                         return 'collection';
                     }
                 }
@@ -2342,6 +2365,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     var _pattern = _step2.value;
 
                     if (_pattern.test(content)) {
+                        console.log('Variable is a DB query');
                         return 'db';
                     }
                 }
@@ -2373,6 +2397,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     var _pattern2 = _step3.value;
 
                     if (_pattern2.test(content)) {
+                        console.log('Variable is a model instance');
                         return 'model';
                     }
                 }
@@ -2393,27 +2418,23 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 }
             }
 
+            console.log('Variable type not determined, defaulting to collection');
             return 'collection';
         },
         autoShowHints: function autoShowHints(editor) {
+            var _this4 = this;
+
             var cursor = editor.getCursor();
-            var token = editor.getTokenAt(cursor);
             var line = editor.getLine(cursor.line);
             var lineUntilCursor = line.substring(0, cursor.ch);
 
             // عرض الاقتراحات تلقائيًا عند كتابة "::" أو "->"
             if (lineUntilCursor.endsWith('::') || lineUntilCursor.endsWith('->')) {
-                this.showHints(editor);
+                console.log('Auto showing hints for :: or ->');
+                setTimeout(function () {
+                    _this4.showHints(editor);
+                }, 10);
                 return;
-            }
-
-            // عرض الاقتراحات عند كتابة متغير أو كلمة مفتاحية
-            if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
-                // تحقق مما إذا كان هناك سياق محدد
-                var context = this.analyzeContext(editor);
-                if (context.type) {
-                    this.showHints(editor);
-                }
             }
         },
         handleTabCompletion: function handleTabCompletion(cm) {
@@ -2469,7 +2490,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             return false;
         },
         showImportSuggestion: function showImportSuggestion(editor, classInfo) {
-            var _this4 = this;
+            var _this5 = this;
 
             console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
 
@@ -2493,7 +2514,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var importLink = marker.querySelector('.import-link');
             importLink.addEventListener('click', function (e) {
                 e.preventDefault();
-                _this4.addImport(editor, classInfo);
+                _this5.addImport(editor, classInfo);
                 markText.clear();
             });
 
