@@ -2052,18 +2052,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             this.isLoadingClasses = true;
             this.$emit('loading-status', true);
 
-            // Fix URL construction to ensure it works in all environments
-            var classesUrl = void 0;
-            if (this.path.includes('/')) {
-                // Extract base URL more reliably
-                var pathParts = this.path.split('/');
-                pathParts.pop(); // Remove the last segment
-                classesUrl = pathParts.join('/') + '/classes';
-            } else {
-                // Fallback
-                classesUrl = '/tinker/classes';
-            }
+            // تحسين بناء عنوان URL
+            var baseUrl = window.location.origin;
+            var classesUrl = baseUrl + '/tinker/classes';
 
+            // طباعة معلومات التصحيح
+            console.log('Base URL:', baseUrl);
             console.log('Loading classes from:', classesUrl);
 
             __WEBPACK_IMPORTED_MODULE_5_axios___default.a.get(classesUrl).then(function (response) {
@@ -2081,6 +2075,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 }
             }).catch(function (error) {
                 console.error('Error loading classes:', error);
+                console.error('Status:', error.response ? error.response.status : 'No response');
+                console.error('Message:', error.message);
                 // Fallback to default classes if API fails
                 _this2.setDefaultClasses();
             }).finally(function () {
@@ -2186,30 +2182,28 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
             console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
 
-            // Create a marker to show the import suggestion
-            var marker = document.createElement('div');
-            marker.className = 'import-suggestion';
+            // استخدام واجهة CodeMirror لعرض الاقتراح
+            var wrapper = document.createElement('div');
+            wrapper.className = 'CodeMirror-import-suggestion';
+            wrapper.innerHTML = '<div class="import-message">Import ' + classInfo.namespace + '?</div>\n                                <button class="import-button">Import</button>';
 
-            // Use the existing CSS class instead of inline styles
-            marker.innerHTML = '<span>Import ' + classInfo.namespace + '?</span> <button class="import-btn">Import</button>';
+            // إضافة الاقتراح إلى المحرر
+            var cursor = editor.getCursor();
+            editor.addWidget(cursor, wrapper, false);
 
-            // Add the marker to the editor
-            var coords = editor.cursorCoords(true, 'page');
-            marker.style.top = coords.top + 20 + 'px';
-            marker.style.left = coords.left + 'px';
-            document.body.appendChild(marker);
-
-            // Add event listener to the import button
-            var importBtn = marker.querySelector('.import-btn');
+            // إضافة مستمع الحدث لزر الاستيراد
+            var importBtn = wrapper.querySelector('.import-button');
             importBtn.addEventListener('click', function () {
                 _this4.addImport(editor, classInfo);
-                marker.remove();
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
+                }
             });
 
-            // Remove the marker after 5 seconds
+            // إزالة الاقتراح بعد 5 ثوانٍ
             setTimeout(function () {
-                if (marker.parentNode) {
-                    marker.remove();
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
                 }
             }, 5000);
         },
@@ -16126,7 +16120,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n.import-suggestion {\n  position: absolute;\n  background: #f0f0f0;\n  border: 1px solid #ccc;\n  border-radius: 3px;\n  padding: 5px 10px;\n  font-size: 12px;\n  z-index: 1000;\n  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n          box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n}\n.import-suggestion span {\n  margin-right: 10px;\n}\n.import-btn {\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 3px;\n  padding: 2px 8px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.import-btn:hover {\n  background: #45a049;\n}\n", ""]);
+exports.push([module.i, "\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n.CodeMirror-import-suggestion {\n  background: #2c3e50;\n  color: white;\n  border-radius: 4px;\n  padding: 8px 12px;\n  margin-top: 5px;\n  -webkit-box-shadow: 0 2px 8px rgba(0, 0, 0, .3);\n          box-shadow: 0 2px 8px rgba(0, 0, 0, .3);\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n  -ms-flex-align: center;\n  align-items: center;\n  -webkit-box-pack: justify;\n  -ms-flex-pack: justify;\n  justify-content: space-between;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 12px;\n  max-width: 400px;\n}\n.import-message {\n  margin-right: 10px;\n}\n.import-button {\n  background: #27ae60;\n  color: white;\n  border: none;\n  border-radius: 3px;\n  padding: 4px 10px;\n  cursor: pointer;\n  font-size: 12px;\n  -webkit-transition: background .2s;\n          transition: background .2s;\n}\n.import-button:hover {\n  background: #2ecc71;\n}\n", ""]);
 
 // exports
 

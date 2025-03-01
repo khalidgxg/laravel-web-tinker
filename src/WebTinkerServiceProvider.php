@@ -58,14 +58,12 @@ class WebTinkerServiceProvider extends ServiceProvider
 
     protected function registerRoutes()
     {
-        Route::group([
-            'prefix' => config('web-tinker.path'),
-            'middleware' => config('web-tinker.middleware'),
-        ], function () {
-            Route::get('/', [WebTinkerController::class, 'index']);
-            Route::post('/', [WebTinkerController::class, 'execute']);
-            Route::get('/suggestions', [WebTinkerController::class, 'getSuggestions']);
-            Route::get('/classes', [WebTinkerController::class, 'getAvailableClasses']);
+        Route::domain(config('web-tinker.domain', ''))->group(function () {
+            Route::prefix(config('web-tinker.path', 'tinker'))->group(function () {
+                Route::get('/', 'Spatie\\WebTinker\\Http\\Controllers\\WebTinkerController@index');
+                Route::post('/', 'Spatie\\WebTinker\\Http\\Controllers\\WebTinkerController@execute');
+                Route::get('/classes', 'Spatie\\WebTinker\\Http\\Controllers\\WebTinkerController@getAvailableClasses');
+            });
         });
 
         return $this;

@@ -96,18 +96,12 @@ export default {
             this.isLoadingClasses = true;
             this.$emit('loading-status', true);
 
-            // Fix URL construction to ensure it works in all environments
-            let classesUrl;
-            if (this.path.includes('/')) {
-                // Extract base URL more reliably
-                const pathParts = this.path.split('/');
-                pathParts.pop(); // Remove the last segment
-                classesUrl = pathParts.join('/') + '/classes';
-            } else {
-                // Fallback
-                classesUrl = '/tinker/classes';
-            }
+            // تحسين بناء عنوان URL
+            let baseUrl = window.location.origin;
+            let classesUrl = baseUrl + '/tinker/classes';
 
+            // طباعة معلومات التصحيح
+            console.log('Base URL:', baseUrl);
             console.log('Loading classes from:', classesUrl);
 
             axios.get(classesUrl)
@@ -127,6 +121,8 @@ export default {
                 })
                 .catch(error => {
                     console.error('Error loading classes:', error);
+                    console.error('Status:', error.response ? error.response.status : 'No response');
+                    console.error('Message:', error.message);
                     // Fallback to default classes if API fails
                     this.setDefaultClasses();
                 })
@@ -243,30 +239,29 @@ export default {
         showImportSuggestion(editor, classInfo) {
             console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
 
-            // Create a marker to show the import suggestion
-            const marker = document.createElement('div');
-            marker.className = 'import-suggestion';
+            // استخدام واجهة CodeMirror لعرض الاقتراح
+            const wrapper = document.createElement('div');
+            wrapper.className = 'CodeMirror-import-suggestion';
+            wrapper.innerHTML = `<div class="import-message">Import ${classInfo.namespace}?</div>
+                                <button class="import-button">Import</button>`;
 
-            // Use the existing CSS class instead of inline styles
-            marker.innerHTML = `<span>Import ${classInfo.namespace}?</span> <button class="import-btn">Import</button>`;
+            // إضافة الاقتراح إلى المحرر
+            const cursor = editor.getCursor();
+            editor.addWidget(cursor, wrapper, false);
 
-            // Add the marker to the editor
-            const coords = editor.cursorCoords(true, 'page');
-            marker.style.top = (coords.top + 20) + 'px';
-            marker.style.left = coords.left + 'px';
-            document.body.appendChild(marker);
-
-            // Add event listener to the import button
-            const importBtn = marker.querySelector('.import-btn');
+            // إضافة مستمع الحدث لزر الاستيراد
+            const importBtn = wrapper.querySelector('.import-button');
             importBtn.addEventListener('click', () => {
                 this.addImport(editor, classInfo);
-                marker.remove();
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
+                }
             });
 
-            // Remove the marker after 5 seconds
+            // إزالة الاقتراح بعد 5 ثوانٍ
             setTimeout(() => {
-                if (marker.parentNode) {
-                    marker.remove();
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
                 }
             }, 5000);
         },
@@ -359,32 +354,37 @@ li.CodeMirror-hint-active {
     color: white;
 }
 
-.import-suggestion {
-    position: absolute;
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 5px 10px;
+.CodeMirror-import-suggestion {
+    background: #2c3e50;
+    color: white;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 12px;
-    z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    max-width: 400px;
 }
 
-.import-suggestion span {
+.import-message {
     margin-right: 10px;
 }
 
-.import-btn {
-    background: #4CAF50;
+.import-button {
+    background: #27ae60;
     color: white;
     border: none;
     border-radius: 3px;
-    padding: 2px 8px;
+    padding: 4px 10px;
     cursor: pointer;
     font-size: 12px;
+    transition: background 0.2s;
 }
 
-.import-btn:hover {
-    background: #45a049;
+.import-button:hover {
+    background: #2ecc71;
 }
 </style>
