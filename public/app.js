@@ -1839,6 +1839,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -1860,7 +1869,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
             minSize: 100,
             breakpoint: 768,
             input: '',
-            output: '<span class="text-dimmed">// Use cmd+enter or ctrl+enter to run.</span>'
+            output: '<span class="text-dimmed">// Use cmd+enter or ctrl+enter to run.</span>',
+            isLoading: false
         };
     },
 
@@ -1888,8 +1898,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     },
 
     methods: {
-        handleExecute: function handleExecute(output) {
+        executeCode: function executeCode(output) {
             this.output = __WEBPACK_IMPORTED_MODULE_3_dompurify___default.a.sanitize(output);
+        },
+        updateLoadingStatus: function updateLoadingStatus(status) {
+            this.isLoading = status;
         },
         initSplit: function initSplit() {
             var _Split;
@@ -1940,6 +1953,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_codemirror___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_codemirror__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_axios__ = __webpack_require__("./node_modules/axios/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_axios__);
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 //
 //
 //
@@ -1960,7 +1975,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             codeEditor: null,
             phpKeywords: ['User::all()', 'DB::table(', 'where(', 'select(', 'join(', 'orderBy(', 'groupBy(', 'get()', 'first()', 'find(', 'create(', 'update(', 'delete()', 'with(', 'has(', 'whereHas(', 'whereIn(', 'whereBetween(', 'whereNull(', 'whereNotNull(', 'count()', 'sum(', 'avg(', 'max(', 'min(',
             // Add more Laravel specific methods
-            'Auth::', 'Cache::', 'Config::', 'Route::', 'Session::', 'Storage::', 'Hash::', 'Validator::', 'Event::', 'Log::']
+            'Auth::', 'Cache::', 'Config::', 'Route::', 'Session::', 'Storage::', 'Hash::', 'Validator::', 'Event::', 'Log::'],
+            phpClasses: [],
+            importedClasses: new Set(),
+            lastImportLine: 0,
+            isLoadingClasses: false
         };
     },
 
@@ -1987,6 +2006,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                     } else {
                         _this.handleTabCompletion(cm);
                     }
+                },
+                'Alt-I': function AltI(cm) {
+                    _this.importClass(cm);
                 }
             },
             indentWithTabs: true,
@@ -2002,6 +2024,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         this.codeEditor.on('change', function (editor) {
             localStorage.setItem('tinker-tool', editor.getValue());
             _this.autoShowHints(editor);
+            _this.checkForClassImport(editor);
         });
 
         this.codeEditor.on('keyup', function (editor, event) {
@@ -2016,12 +2039,61 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             this.codeEditor.setValue(value);
             this.codeEditor.execCommand('goDocEnd');
         }
+
+        // Load available classes from the server
+        this.loadAvailableClasses();
     },
 
 
     methods: {
-        executeCode: function executeCode() {
+        loadAvailableClasses: function loadAvailableClasses() {
             var _this2 = this;
+
+            this.isLoadingClasses = true;
+            this.$emit('loading-status', true);
+
+            // Fix URL construction to ensure it works in all environments
+            var classesUrl = void 0;
+            if (this.path.includes('/')) {
+                // Extract base URL more reliably
+                var pathParts = this.path.split('/');
+                pathParts.pop(); // Remove the last segment
+                classesUrl = pathParts.join('/') + '/classes';
+            } else {
+                // Fallback
+                classesUrl = '/tinker/classes';
+            }
+
+            console.log('Loading classes from:', classesUrl);
+
+            __WEBPACK_IMPORTED_MODULE_5_axios___default.a.get(classesUrl).then(function (response) {
+                if (response.data && response.data.classes) {
+                    _this2.phpClasses = response.data.classes;
+                    console.log('Loaded classes:', _this2.phpClasses.length);
+
+                    if (response.data.count) {
+                        console.log('Total classes:', response.data.count);
+                    }
+
+                    if (response.data.app_path) {
+                        console.log('App path:', response.data.app_path);
+                    }
+                }
+            }).catch(function (error) {
+                console.error('Error loading classes:', error);
+                // Fallback to default classes if API fails
+                _this2.setDefaultClasses();
+            }).finally(function () {
+                _this2.isLoadingClasses = false;
+                _this2.$emit('loading-status', false);
+            });
+        },
+        setDefaultClasses: function setDefaultClasses() {
+            // Fallback classes if API fails
+            this.phpClasses = [{ name: 'User', namespace: 'App\\Models\\User' }, { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' }, { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' }, { name: 'Route', namespace: 'Illuminate\\Support\\Facades\\Route' }, { name: 'Storage', namespace: 'Illuminate\\Support\\Facades\\Storage' }, { name: 'Hash', namespace: 'Illuminate\\Support\\Facades\\Hash' }, { name: 'Cache', namespace: 'Illuminate\\Support\\Facades\\Cache' }, { name: 'Session', namespace: 'Illuminate\\Support\\Facades\\Session' }, { name: 'Validator', namespace: 'Illuminate\\Support\\Facades\\Validator' }, { name: 'Carbon', namespace: 'Carbon\\Carbon' }, { name: 'Str', namespace: 'Illuminate\\Support\\Str' }, { name: 'Arr', namespace: 'Illuminate\\Support\\Arr' }];
+        },
+        executeCode: function executeCode() {
+            var _this3 = this;
 
             var code = this.codeEditor.getValue().trim();
 
@@ -2033,7 +2105,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             __WEBPACK_IMPORTED_MODULE_5_axios___default.a.post(this.path, { code: code }).then(function (_ref) {
                 var data = _ref.data;
 
-                _this2.$emit('execute', data);
+                _this3.$emit('execute', data);
             });
         },
         showHints: function showHints(editor) {
@@ -2044,7 +2116,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var end = cursor.ch;
             var currentWord = line.slice(start, end).toLowerCase();
 
-            var list = this.phpKeywords.filter(function (item) {
+            // Combine keywords and class names for suggestions
+            var suggestions = [].concat(_toConsumableArray(this.phpKeywords));
+            this.phpClasses.forEach(function (cls) {
+                suggestions.push(cls.name);
+            });
+
+            var list = suggestions.filter(function (item) {
                 return item.toLowerCase().includes(currentWord);
             });
 
@@ -2078,6 +2156,99 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 this.showHints(cm);
             } else {
                 cm.replaceSelection('    ');
+            }
+        },
+        checkForClassImport: function checkForClassImport(editor) {
+            var cursor = editor.getCursor();
+            var token = editor.getTokenAt(cursor);
+
+            // Check if we just typed a class name
+            if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
+                var className = token.string;
+
+                // Find if this is a known class that needs import
+                var classInfo = this.phpClasses.find(function (cls) {
+                    return cls.name === className;
+                });
+
+                if (classInfo && !this.importedClasses.has(className)) {
+                    // Show import suggestion
+                    this.showImportSuggestion(editor, classInfo);
+                }
+            }
+        },
+        showImportSuggestion: function showImportSuggestion(editor, classInfo) {
+            var _this4 = this;
+
+            // Create a marker to show the import suggestion
+            var marker = document.createElement('div');
+            marker.className = 'import-suggestion';
+            marker.innerHTML = '<span>Import ' + classInfo.namespace + '?</span> <button class="import-btn">Import</button>';
+
+            // Add the marker to the editor
+            editor.addWidget(editor.getCursor(), marker, false);
+
+            // Add event listener to the import button
+            var importBtn = marker.querySelector('.import-btn');
+            importBtn.addEventListener('click', function () {
+                _this4.addImport(editor, classInfo);
+                marker.remove();
+            });
+
+            // Remove the marker after 5 seconds
+            setTimeout(function () {
+                if (marker.parentNode) {
+                    marker.remove();
+                }
+            }, 5000);
+        },
+        importClass: function importClass(editor) {
+            var cursor = editor.getCursor();
+            var token = editor.getTokenAt(cursor);
+
+            if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
+                var className = token.string;
+                var classInfo = this.phpClasses.find(function (cls) {
+                    return cls.name === className;
+                });
+
+                if (classInfo) {
+                    this.addImport(editor, classInfo);
+                }
+            }
+        },
+        addImport: function addImport(editor, classInfo) {
+            // Check if we already imported this class
+            if (this.importedClasses.has(classInfo.name)) {
+                return;
+            }
+
+            // Add to imported classes set
+            this.importedClasses.add(classInfo.name);
+
+            // Find where to insert the import
+            var importStatement = 'use ' + classInfo.namespace + ';';
+
+            // Check if there are already imports
+            var hasImports = false;
+            var lastImportLine = 0;
+
+            for (var i = 0; i < editor.lineCount(); i++) {
+                var line = editor.getLine(i);
+                if (line.trim().startsWith('use ') && line.includes(';')) {
+                    hasImports = true;
+                    lastImportLine = i;
+                }
+            }
+
+            if (hasImports) {
+                // Insert after the last import
+                editor.replaceRange(importStatement + '\n', { line: lastImportLine + 1, ch: 0 }, { line: lastImportLine + 1, ch: 0 });
+                this.lastImportLine = lastImportLine + 1;
+            } else {
+                // Insert at the beginning of the file
+                editor.replaceRange(importStatement + '\n\n', { line: 0, ch: 0 }, { line: 0, ch: 0 });
+                this.lastImportLine = 0;
             }
         }
     }
@@ -15944,7 +16115,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n", ""]);
+exports.push([module.i, "\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n.import-suggestion {\n  position: absolute;\n  background: #f0f0f0;\n  border: 1px solid #ccc;\n  border-radius: 3px;\n  padding: 5px 10px;\n  font-size: 12px;\n  z-index: 1000;\n  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n          box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n}\n.import-suggestion span {\n  margin-right: 10px;\n}\n.import-btn {\n  background: #4caf50;\n  color: white;\n  border: none;\n  border-radius: 3px;\n  padding: 2px 8px;\n  cursor: pointer;\n  font-size: 12px;\n}\n.import-btn:hover {\n  background: #45a049;\n}\n", ""]);
 
 // exports
 
@@ -19107,31 +19278,36 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c(
-    "main",
-    {
-      class: ["layout", { "layout-columns": _vm.needsColumnLayout }],
-      style: _vm.gridStyle
-    },
-    [
-      _c("tinker-input", {
-        attrs: { path: _vm.path },
-        on: { execute: _vm.handleExecute },
-        model: {
-          value: _vm.input,
-          callback: function($$v) {
-            _vm.input = $$v
-          },
-          expression: "input"
-        }
-      }),
-      _vm._v(" "),
-      _c("hr", { ref: "gutter", staticClass: "layout-gutter" }),
-      _vm._v(" "),
-      _c("tinker-output", { attrs: { value: _vm.output } })
-    ],
-    1
-  )
+  return _c("div", { staticClass: "tinker" }, [
+    _vm.isLoading
+      ? _c("div", { staticClass: "tinker__status" }, [
+          _c("span", { staticClass: "tinker__status-text" }, [
+            _vm._v("Loading classes...")
+          ])
+        ])
+      : _vm._e(),
+    _vm._v(" "),
+    _c(
+      "div",
+      { staticClass: "split-view" },
+      [
+        _c("TinkerInput", {
+          ref: "tinkerInput",
+          attrs: { path: _vm.path },
+          on: {
+            execute: _vm.executeCode,
+            "loading-status": _vm.updateLoadingStatus
+          }
+        }),
+        _vm._v(" "),
+        _c("div", {
+          staticClass: "output",
+          domProps: { innerHTML: _vm._s(_vm.output) }
+        })
+      ],
+      1
+    )
+  ])
 }
 var staticRenderFns = []
 render._withStripped = true

@@ -222,14 +222,18 @@ export default {
             const cursor = editor.getCursor();
             const token = editor.getTokenAt(cursor);
 
+            console.log('Checking for class import:', token);
+
             // Check if we just typed a class name
             if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
                 const className = token.string;
+                console.log('Found potential class name:', className);
 
                 // Find if this is a known class that needs import
                 const classInfo = this.phpClasses.find(cls => cls.name === className);
 
                 if (classInfo && !this.importedClasses.has(className)) {
+                    console.log('Class needs import:', classInfo);
                     // Show import suggestion
                     this.showImportSuggestion(editor, classInfo);
                 }
@@ -237,13 +241,26 @@ export default {
         },
 
         showImportSuggestion(editor, classInfo) {
+            console.log('Showing import suggestion for:', classInfo.name, classInfo.namespace);
+
             // Create a marker to show the import suggestion
             const marker = document.createElement('div');
             marker.className = 'import-suggestion';
-            marker.innerHTML = `<span>Import ${classInfo.namespace}?</span> <button class="import-btn">Import</button>`;
+            marker.style.position = 'absolute';
+            marker.style.backgroundColor = '#f0f0f0';
+            marker.style.border = '1px solid #ccc';
+            marker.style.borderRadius = '3px';
+            marker.style.padding = '5px 10px';
+            marker.style.fontSize = '12px';
+            marker.style.zIndex = '1000';
+            marker.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+            marker.innerHTML = `<span style="margin-right: 10px;">Import ${classInfo.namespace}?</span> <button class="import-btn" style="background: #4CAF50; color: white; border: none; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 12px;">Import</button>`;
 
             // Add the marker to the editor
-            editor.addWidget(editor.getCursor(), marker, false);
+            const coords = editor.cursorCoords(true, 'page');
+            marker.style.top = (coords.top + 20) + 'px';
+            marker.style.left = coords.left + 'px';
+            document.body.appendChild(marker);
 
             // Add event listener to the import button
             const importBtn = marker.querySelector('.import-btn');
