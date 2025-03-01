@@ -240,27 +240,66 @@ export default {
             const end = cursor.ch;
             const currentWord = line.slice(start, end).toLowerCase();
 
-            // تحليل السياق الحالي للحصول على اقتراحات أكثر دقة
+            console.log('Current word:', currentWord);
+            console.log('Token:', token);
+
+            // تحليل السياق الحالي
             const context = this.analyzeContext(editor);
-            let suggestions = [];
+            console.log('Context:', context);
 
-            if (context.type) {
-                // إذا كان هناك سياق محدد، استخدم الاقتراحات المناسبة له
-                const contextSuggestions = this.contextualSuggestions[context.type] || [];
+            let list = [];
 
-                // إضافة اقتراحات السياق فقط (بدون إضافة اقتراحات عامة)
-                contextSuggestions.forEach(suggestion => {
-                    suggestions.push({
-                        text: suggestion,
-                        displayText: suggestion,
-                        className: `hint-${context.type}`,
+            // إذا كان هناك سياق محدد (مثل User:: أو DB::)
+            if (context.type === 'model') {
+                // اقتراحات خاصة بالنماذج
+                list = this.contextualSuggestions.model.map(item => ({
+                    text: item,
+                    displayText: item,
+                    className: 'hint-model',
+                    render: (element, self, data) => {
+                        element.innerHTML = `<span class="hint-model">${data.displayText}</span>`;
+                    }
+                }));
+                console.log('Showing model suggestions:', list.length);
+            }
+            else if (context.type === 'db') {
+                // اقتراحات خاصة بقاعدة البيانات
+                list = this.contextualSuggestions.db.map(item => ({
+                    text: item,
+                    displayText: item,
+                    className: 'hint-db',
+                    render: (element, self, data) => {
+                        element.innerHTML = `<span class="hint-db">${data.displayText}</span>`;
+                    }
+                }));
+                console.log('Showing DB suggestions:', list.length);
+            }
+            else if (context.type === 'collection') {
+                // اقتراحات خاصة بالمجموعات
+                list = this.contextualSuggestions.collection.map(item => ({
+                    text: item,
+                    displayText: item,
+                    className: 'hint-collection',
+                    render: (element, self, data) => {
+                        element.innerHTML = `<span class="hint-collection">${data.displayText}</span>`;
+                    }
+                }));
+                console.log('Showing collection suggestions:', list.length);
+            }
+            else {
+                // اقتراحات عامة (فقط إذا لم يكن هناك سياق محدد)
+
+                // إضافة الفئات
+                this.phpClasses.forEach(cls => {
+                    list.push({
+                        text: cls.name,
+                        displayText: cls.name,
+                        className: 'hint-class',
                         render: (element, self, data) => {
-                            element.innerHTML = `<span class="hint-${context.type}">${data.displayText}</span>`;
+                            element.innerHTML = `<span class="hint-class">${data.displayText}</span>`;
                         }
                     });
                 });
-            } else {
-                // إذا لم يكن هناك سياق محدد، استخدم الاقتراحات العامة
 
                 // إضافة الكلمات المفتاحية
                 this.phpKeywords.forEach(keyword => {
@@ -273,7 +312,7 @@ export default {
                         type = 'db';
                     }
 
-                    suggestions.push({
+                    list.push({
                         text: keyword,
                         displayText: keyword,
                         className: `hint-${type}`,
@@ -283,35 +322,23 @@ export default {
                     });
                 });
 
-                // إضافة الفئات
-                this.phpClasses.forEach(cls => {
-                    suggestions.push({
-                        text: cls.name,
-                        displayText: cls.name,
-                        className: 'hint-class',
-                        render: (element, self, data) => {
-                            element.innerHTML = `<span class="hint-class">${data.displayText}</span>`;
-                        }
-                    });
-                });
+                console.log('Showing general suggestions:', list.length);
             }
 
             // تصفية الاقتراحات بناءً على الكلمة الحالية
-            const filteredList = suggestions.filter(item =>
-                item.text.toLowerCase().includes(currentWord)
-            );
+            if (currentWord) {
+                list = list.filter(item =>
+                    item.text.toLowerCase().includes(currentWord)
+                );
+                console.log('Filtered suggestions:', list.length);
+            }
 
-            // ترتيب الاقتراحات
-            filteredList.sort((a, b) => {
-                // ترتيب أبجدي ضمن نفس النوع
-                return a.text.localeCompare(b.text);
-            });
-
-            if (filteredList.length > 0) {
+            // عرض الاقتراحات فقط إذا كان هناك اقتراحات
+            if (list.length > 0) {
                 editor.showHint({
                     completeSingle: false,
                     hint: () => ({
-                        list: filteredList,
+                        list: list,
                         from: CodeMirror.Pos(cursor.line, start),
                         to: CodeMirror.Pos(cursor.line, end)
                     })
@@ -327,12 +354,8 @@ export default {
 
             console.log('Analyzing context for line:', lineUntilCursor);
 
-            // البحث عن نمط "->", "::" أو "."
-            const arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
+            // البحث عن نمط "::" (مثل User::)
             const staticMatch = lineUntilCursor.match(/(\w+)\s*::$/);
-            const dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
-
-            // تحقق من وجود نمط "Model::" (مثل User::)
             if (staticMatch) {
                 const className = staticMatch[1];
                 console.log('Found static match:', className);
@@ -346,18 +369,13 @@ export default {
 
                 // تحقق مما إذا كان اسم فئة (يبدأ بحرف كبير)
                 if (/^[A-Z]/.test(className)) {
-                    // تحقق مما إذا كان نموذجًا (Model)
-                    const classInfo = this.phpClasses.find(cls => cls.name === className);
-                    if (classInfo && classInfo.namespace.includes('\\Models\\')) {
-                        console.log('Detected model class:', className);
-                        return { type: 'model', objectName: className };
-                    }
-                    console.log('Detected class (treating as model):', className);
+                    console.log('Detected model class:', className);
                     return { type: 'model', objectName: className };
                 }
             }
 
-            // تحقق من وجود نمط "->method" (مثل $users->)
+            // البحث عن نمط "->" (مثل $users->)
+            const arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
             if (arrowMatch) {
                 const variableName = arrowMatch[1];
                 console.log('Found arrow match:', variableName);
@@ -368,7 +386,8 @@ export default {
                 return { type: contextType, objectName: variableName };
             }
 
-            // تحقق من وجود نمط "." (للسلاسل النصية أو المصفوفات)
+            // البحث عن نمط "." (مثل $array.)
+            const dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
             if (dotMatch) {
                 console.log('Found dot match:', dotMatch[1]);
                 return { type: 'collection', objectName: dotMatch[1] };
@@ -385,7 +404,9 @@ export default {
             const content = editor.getValue();
 
             // تنظيف اسم المتغير (إزالة $ إذا كان موجودًا)
-            const cleanVarName = variableName.replace('$', '');
+            const cleanVarName = variableName.replace(/^\$/, '');
+
+            console.log('Determining type for variable:', cleanVarName);
 
             // تحقق مما إذا كان المتغير هو نتيجة استدعاء نموذج
             const modelPatterns = [
@@ -396,6 +417,7 @@ export default {
 
             for (const pattern of modelPatterns) {
                 if (pattern.test(content)) {
+                    console.log('Variable is a collection (from model)');
                     return 'collection';
                 }
             }
@@ -409,6 +431,7 @@ export default {
 
             for (const pattern of dbPatterns) {
                 if (pattern.test(content)) {
+                    console.log('Variable is a DB query');
                     return 'db';
                 }
             }
@@ -423,33 +446,28 @@ export default {
 
             for (const pattern of singleModelPatterns) {
                 if (pattern.test(content)) {
+                    console.log('Variable is a model instance');
                     return 'model';
                 }
             }
 
             // افتراضيًا، اعتبره مجموعة
+            console.log('Variable type not determined, defaulting to collection');
             return 'collection';
         },
 
         autoShowHints(editor) {
             const cursor = editor.getCursor();
-            const token = editor.getTokenAt(cursor);
             const line = editor.getLine(cursor.line);
             const lineUntilCursor = line.substring(0, cursor.ch);
 
             // عرض الاقتراحات تلقائيًا عند كتابة "::" أو "->"
             if (lineUntilCursor.endsWith('::') || lineUntilCursor.endsWith('->')) {
-                this.showHints(editor);
-                return;
-            }
-
-            // عرض الاقتراحات عند كتابة متغير أو كلمة مفتاحية
-            if (token.type === 'variable' || token.string.match(/[a-zA-Z$_:>]/)) {
-                // تحقق مما إذا كان هناك سياق محدد
-                const context = this.analyzeContext(editor);
-                if (context.type) {
+                console.log('Auto showing hints for :: or ->');
+                setTimeout(() => {
                     this.showHints(editor);
-                }
+                }, 10);
+                return;
             }
         },
 
