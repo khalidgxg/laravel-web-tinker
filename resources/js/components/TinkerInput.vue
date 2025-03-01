@@ -127,7 +127,7 @@ export default {
                 htmlMode: false
             },
             tabSize: 4,
-            theme: 'dracula',
+            theme: 'vscode-dark',
             matchBrackets: true,
             autoCloseBrackets: true,
             styleActiveLine: true,
@@ -179,62 +179,203 @@ export default {
         // Load available classes from the server
         this.loadAvailableClasses();
 
-        // إضافة أنماط CSS مخصصة لتحسين مظهر الاقتراحات
+        // إضافة أنماط CSS مخصصة لتحسين مظهر المحرر والاقتراحات
         const style = document.createElement('style');
         style.textContent = `
+            /* ثيم مشابه لـ VS Code الافتراضي */
+            .cm-s-vscode-dark.CodeMirror {
+                background-color: #1e1e1e;
+                color: #d4d4d4;
+            }
+
+            .cm-s-vscode-dark .CodeMirror-gutters {
+                background: #1e1e1e;
+                border-right: 1px solid #333;
+            }
+
+            .cm-s-vscode-dark .CodeMirror-linenumber {
+                color: #858585;
+            }
+
+            .cm-s-vscode-dark .CodeMirror-cursor {
+                border-left: 1px solid #d4d4d4;
+            }
+
+            .cm-s-vscode-dark .cm-keyword {
+                color: #569cd6;
+            }
+
+            .cm-s-vscode-dark .cm-operator {
+                color: #d4d4d4;
+            }
+
+            .cm-s-vscode-dark .cm-variable-2 {
+                color: #9cdcfe;
+            }
+
+            .cm-s-vscode-dark .cm-variable-3 {
+                color: #4ec9b0;
+            }
+
+            .cm-s-vscode-dark .cm-builtin {
+                color: #dcdcaa;
+            }
+
+            .cm-s-vscode-dark .cm-atom {
+                color: #569cd6;
+            }
+
+            .cm-s-vscode-dark .cm-number {
+                color: #b5cea8;
+            }
+
+            .cm-s-vscode-dark .cm-def {
+                color: #9cdcfe;
+            }
+
+            .cm-s-vscode-dark .cm-string {
+                color: #ce9178;
+            }
+
+            .cm-s-vscode-dark .cm-string-2 {
+                color: #ce9178;
+            }
+
+            .cm-s-vscode-dark .cm-comment {
+                color: #6a9955;
+            }
+
+            .cm-s-vscode-dark .cm-tag {
+                color: #569cd6;
+            }
+
+            .cm-s-vscode-dark .cm-meta {
+                color: #dcdcaa;
+            }
+
+            .cm-s-vscode-dark .cm-attribute {
+                color: #9cdcfe;
+            }
+
+            .cm-s-vscode-dark .cm-property {
+                color: #9cdcfe;
+            }
+
+            .cm-s-vscode-dark .cm-qualifier {
+                color: #9cdcfe;
+            }
+
+            .cm-s-vscode-dark .cm-variable {
+                color: #9cdcfe;
+            }
+
+            .cm-s-vscode-dark .cm-tag {
+                color: #569cd6;
+            }
+
+            .cm-s-vscode-dark .cm-error {
+                color: #f44747;
+            }
+
+            .cm-s-vscode-dark .CodeMirror-activeline-background {
+                background: #2c2c2c;
+            }
+
+            .cm-s-vscode-dark .CodeMirror-matchingbracket {
+                outline: 1px solid grey;
+                color: #d4d4d4 !important;
+                background-color: #3b3b3b;
+            }
+
+            /* تحسين تصميم التحديد */
+            .cm-s-vscode-dark .CodeMirror-selected {
+                background-color: #264f78 !important;
+            }
+
+            .cm-s-vscode-dark .CodeMirror-selectedtext {
+                color: #ffffff !important;
+            }
+
+            /* تحسين تصميم الاقتراحات */
             .CodeMirror-hints {
                 position: absolute;
-                z-index: 10;
+                z-index: 1000;
                 overflow: hidden;
                 list-style: none;
                 margin: 0;
                 padding: 2px;
-                border-radius: 4px;
-                border: 1px solid #ddd;
-                background: #232836;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                border-radius: 3px;
+                border: 1px solid #454545;
+                background: #252526;
+                font-size: 90%;
                 max-height: 20em;
                 overflow-y: auto;
-                font-family: monospace;
-                font-size: 14px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.4);
             }
 
             .CodeMirror-hint {
                 margin: 0;
-                padding: 4px 8px;
+                padding: 5px 10px;
                 border-radius: 2px;
                 white-space: pre;
-                color: #e6e6e6;
+                color: #d4d4d4;
                 cursor: pointer;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                transition: background 0.2s ease;
             }
 
             li.CodeMirror-hint-active {
-                background-color: #4d78cc;
-                color: white;
+                background: #0e639c;
+                color: #ffffff;
             }
 
-            .CodeMirror-hint-class {
-                color: #4EC9B0;
+            /* تصنيف الاقتراحات حسب النوع */
+            .hint-model {
+                color: #c586c0;
             }
 
-            .CodeMirror-hint-method {
-                color: #DCDCAA;
+            .hint-db {
+                color: #4ec9b0;
             }
 
-            .CodeMirror-hint-property {
-                color: #9CDCFE;
+            .hint-collection {
+                color: #b5cea8;
             }
 
-            .CodeMirror-hint-variable {
-                color: #9CDCFE;
+            .hint-class {
+                color: #4ec9b0;
             }
 
-            .CodeMirror-hint-function {
-                color: #DCDCAA;
+            .hint-facade {
+                color: #dcdcaa;
             }
 
-            .CodeMirror-hint-keyword {
-                color: #569CD6;
+            .hint-keyword {
+                color: #569cd6;
+            }
+
+            .CodeMirror-import-tooltip {
+                background: #252526;
+                color: #d4d4d4;
+                padding: 5px 10px;
+                border-radius: 3px;
+                border: 1px solid #454545;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                font-size: 12px;
+                display: inline-block;
+                margin-left: 20px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+
+            .import-link {
+                color: #3794ff;
+                text-decoration: none;
+                margin-left: 8px;
+                font-weight: bold;
+            }
+
+            .import-link:hover {
+                text-decoration: underline;
             }
         `;
         document.head.appendChild(style);
