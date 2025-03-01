@@ -4,6 +4,7 @@ namespace Spatie\WebTinker\Http\Controllers;
 
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Spatie\WebTinker\Tinker;
 
 class WebTinkerController
@@ -46,6 +47,94 @@ class WebTinkerController
 
         return response()->json([
             'suggestions' => array_unique($suggestions)
+        ]);
+    }
+
+    public function getAvailableClasses()
+    {
+        $result = [];
+
+        // Common Laravel classes
+        $laravelClasses = [
+            ['name' => 'Auth', 'namespace' => 'Illuminate\\Support\\Facades\\Auth'],
+            ['name' => 'DB', 'namespace' => 'Illuminate\\Support\\Facades\\DB'],
+            ['name' => 'Route', 'namespace' => 'Illuminate\\Support\\Facades\\Route'],
+            ['name' => 'Storage', 'namespace' => 'Illuminate\\Support\\Facades\\Storage'],
+            ['name' => 'Hash', 'namespace' => 'Illuminate\\Support\\Facades\\Hash'],
+            ['name' => 'Cache', 'namespace' => 'Illuminate\\Support\\Facades\\Cache'],
+            ['name' => 'Session', 'namespace' => 'Illuminate\\Support\\Facades\\Session'],
+            ['name' => 'Validator', 'namespace' => 'Illuminate\\Support\\Facades\\Validator'],
+            ['name' => 'Event', 'namespace' => 'Illuminate\\Support\\Facades\\Event'],
+            ['name' => 'Log', 'namespace' => 'Illuminate\\Support\\Facades\\Log'],
+            ['name' => 'Carbon', 'namespace' => 'Carbon\\Carbon'],
+            ['name' => 'Collection', 'namespace' => 'Illuminate\\Support\\Collection'],
+            ['name' => 'Str', 'namespace' => 'Illuminate\\Support\\Str'],
+            ['name' => 'Arr', 'namespace' => 'Illuminate\\Support\\Arr']
+        ];
+
+        $result = array_merge($result, $laravelClasses);
+
+        // Scan app/Models directory for model classes
+        $modelsPath = app_path('Models');
+        if (File::isDirectory($modelsPath)) {
+            $modelFiles = File::files($modelsPath);
+
+            foreach ($modelFiles as $file) {
+                $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                if ($className && $className !== 'index') {
+                    $result[] = [
+                        'name' => $className,
+                        'namespace' => 'App\\Models\\' . $className
+                    ];
+                }
+            }
+        }
+
+        // Legacy app directory models
+        $legacyModelsPath = app_path();
+        if (File::isDirectory($legacyModelsPath)) {
+            $modelFiles = File::files($legacyModelsPath);
+
+            foreach ($modelFiles as $file) {
+                $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                if ($className && $className !== 'index' &&
+                    !in_array($className, ['User', 'Console', 'Exceptions', 'Http', 'Providers'])) {
+                    $result[] = [
+                        'name' => $className,
+                        'namespace' => 'App\\' . $className
+                    ];
+                }
+            }
+        }
+
+        // Get all loaded classes
+        $loadedClasses = get_declared_classes();
+        foreach ($loadedClasses as $class) {
+            // Only include App namespace classes
+            if (strpos($class, 'App\\') === 0) {
+                $parts = explode('\\', $class);
+                $className = end($parts);
+
+                // Check if class already exists in result
+                $exists = false;
+                foreach ($result as $item) {
+                    if ($item['name'] === $className) {
+                        $exists = true;
+                        break;
+                    }
+                }
+
+                if (!$exists) {
+                    $result[] = [
+                        'name' => $className,
+                        'namespace' => $class
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'classes' => $result
         ]);
     }
 }

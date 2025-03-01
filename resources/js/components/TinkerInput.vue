@@ -24,7 +24,11 @@ export default {
             // Add more Laravel specific methods
             'Auth::', 'Cache::', 'Config::', 'Route::', 'Session::',
             'Storage::', 'Hash::', 'Validator::', 'Event::', 'Log::'
-        ]
+        ],
+        phpClasses: [],
+        importedClasses: new Set(),
+        lastImportLine: 0,
+        isLoadingClasses: false
     }),
 
     props: ['path'],
@@ -48,6 +52,9 @@ export default {
                     } else {
                         this.handleTabCompletion(cm);
                     }
+                },
+                'Alt-I': (cm) => {
+                    this.importClass(cm);
                 }
             },
             indentWithTabs: true,
@@ -63,6 +70,7 @@ export default {
         this.codeEditor.on('change', editor => {
             localStorage.setItem('tinker-tool', editor.getValue());
             this.autoShowHints(editor);
+            this.checkForClassImport(editor);
         });
 
         this.codeEditor.on('keyup', (editor, event) => {
@@ -78,9 +86,54 @@ export default {
             this.codeEditor.setValue(value);
             this.codeEditor.execCommand('goDocEnd');
         }
+
+        // Load available classes from the server
+        this.loadAvailableClasses();
     },
 
     methods: {
+        loadAvailableClasses() {
+            this.isLoadingClasses = true;
+
+            // Get the base URL from the path prop
+            const baseUrl = this.path.substring(0, this.path.lastIndexOf('/'));
+            const classesUrl = `${baseUrl}/classes`;
+
+            axios.get(classesUrl)
+                .then(response => {
+                    if (response.data && response.data.classes) {
+                        this.phpClasses = response.data.classes;
+                        console.log('Loaded classes:', this.phpClasses.length);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading classes:', error);
+                    // Fallback to default classes if API fails
+                    this.setDefaultClasses();
+                })
+                .finally(() => {
+                    this.isLoadingClasses = false;
+                });
+        },
+
+        setDefaultClasses() {
+            // Fallback classes if API fails
+            this.phpClasses = [
+                { name: 'User', namespace: 'App\\Models\\User' },
+                { name: 'Auth', namespace: 'Illuminate\\Support\\Facades\\Auth' },
+                { name: 'DB', namespace: 'Illuminate\\Support\\Facades\\DB' },
+                { name: 'Route', namespace: 'Illuminate\\Support\\Facades\\Route' },
+                { name: 'Storage', namespace: 'Illuminate\\Support\\Facades\\Storage' },
+                { name: 'Hash', namespace: 'Illuminate\\Support\\Facades\\Hash' },
+                { name: 'Cache', namespace: 'Illuminate\\Support\\Facades\\Cache' },
+                { name: 'Session', namespace: 'Illuminate\\Support\\Facades\\Session' },
+                { name: 'Validator', namespace: 'Illuminate\\Support\\Facades\\Validator' },
+                { name: 'Carbon', namespace: 'Carbon\\Carbon' },
+                { name: 'Str', namespace: 'Illuminate\\Support\\Str' },
+                { name: 'Arr', namespace: 'Illuminate\\Support\\Arr' }
+            ];
+        },
+
         executeCode() {
             let code = this.codeEditor.getValue().trim();
 
@@ -102,7 +155,13 @@ export default {
             const end = cursor.ch;
             const currentWord = line.slice(start, end).toLowerCase();
 
-            const list = this.phpKeywords.filter(item =>
+            // Combine keywords and class names for suggestions
+            let suggestions = [...this.phpKeywords];
+            this.phpClasses.forEach(cls => {
+                suggestions.push(cls.name);
+            });
+
+            const list = suggestions.filter(item =>
                 item.toLowerCase().includes(currentWord)
             );
 
@@ -136,6 +195,101 @@ export default {
                 this.showHints(cm);
             } else {
                 cm.replaceSelection('    ');
+            }
+        },
+
+        checkForClassImport(editor) {
+            const cursor = editor.getCursor();
+            const token = editor.getTokenAt(cursor);
+
+            // Check if we just typed a class name
+            if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
+                const className = token.string;
+
+                // Find if this is a known class that needs import
+                const classInfo = this.phpClasses.find(cls => cls.name === className);
+
+                if (classInfo && !this.importedClasses.has(className)) {
+                    // Show import suggestion
+                    this.showImportSuggestion(editor, classInfo);
+                }
+            }
+        },
+
+        showImportSuggestion(editor, classInfo) {
+            // Create a marker to show the import suggestion
+            const marker = document.createElement('div');
+            marker.className = 'import-suggestion';
+            marker.innerHTML = `<span>Import ${classInfo.namespace}?</span> <button class="import-btn">Import</button>`;
+
+            // Add the marker to the editor
+            editor.addWidget(editor.getCursor(), marker, false);
+
+            // Add event listener to the import button
+            const importBtn = marker.querySelector('.import-btn');
+            importBtn.addEventListener('click', () => {
+                this.addImport(editor, classInfo);
+                marker.remove();
+            });
+
+            // Remove the marker after 5 seconds
+            setTimeout(() => {
+                if (marker.parentNode) {
+                    marker.remove();
+                }
+            }, 5000);
+        },
+
+        importClass(editor) {
+            const cursor = editor.getCursor();
+            const token = editor.getTokenAt(cursor);
+
+            if (token.type === 'variable' && token.string.match(/^[A-Z][a-zA-Z0-9_]*$/)) {
+                const className = token.string;
+                const classInfo = this.phpClasses.find(cls => cls.name === className);
+
+                if (classInfo) {
+                    this.addImport(editor, classInfo);
+                }
+            }
+        },
+
+        addImport(editor, classInfo) {
+            // Check if we already imported this class
+            if (this.importedClasses.has(classInfo.name)) {
+                return;
+            }
+
+            // Add to imported classes set
+            this.importedClasses.add(classInfo.name);
+
+            // Find where to insert the import
+            const importStatement = `use ${classInfo.namespace};`;
+
+            // Check if there are already imports
+            let hasImports = false;
+            let lastImportLine = 0;
+
+            for (let i = 0; i < editor.lineCount(); i++) {
+                const line = editor.getLine(i);
+                if (line.trim().startsWith('use ') && line.includes(';')) {
+                    hasImports = true;
+                    lastImportLine = i;
+                }
+            }
+
+            if (hasImports) {
+                // Insert after the last import
+                editor.replaceRange(`${importStatement}\n`,
+                    { line: lastImportLine + 1, ch: 0 },
+                    { line: lastImportLine + 1, ch: 0 });
+                this.lastImportLine = lastImportLine + 1;
+            } else {
+                // Insert at the beginning of the file
+                editor.replaceRange(`${importStatement}\n\n`,
+                    { line: 0, ch: 0 },
+                    { line: 0, ch: 0 });
+                this.lastImportLine = 0;
             }
         }
     }
@@ -172,5 +326,34 @@ export default {
 li.CodeMirror-hint-active {
     background: #08f;
     color: white;
+}
+
+.import-suggestion {
+    position: absolute;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 5px 10px;
+    font-size: 12px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.import-suggestion span {
+    margin-right: 10px;
+}
+
+.import-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.import-btn:hover {
+    background: #45a049;
 }
 </style>

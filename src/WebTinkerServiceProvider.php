@@ -65,6 +65,7 @@ class WebTinkerServiceProvider extends ServiceProvider
             Route::get('/', [WebTinkerController::class, 'index']);
             Route::post('/', [WebTinkerController::class, 'execute']);
             Route::get('/suggestions', [WebTinkerController::class, 'getSuggestions']);
+            Route::get('/classes', [WebTinkerController::class, 'getAvailableClasses']);
         });
 
         return $this;
