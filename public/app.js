@@ -1964,8 +1964,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_codemirror___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_12_codemirror__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_axios__ = __webpack_require__("./node_modules/axios/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_13_axios__);
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
 //
 //
 //
@@ -1995,6 +1993,15 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             phpKeywords: ['User::all()', 'DB::table(', 'where(', 'select(', 'join(', 'orderBy(', 'groupBy(', 'get()', 'first()', 'find(', 'create(', 'update(', 'delete()', 'with(', 'has(', 'whereHas(', 'whereIn(', 'whereBetween(', 'whereNull(', 'whereNotNull(', 'count()', 'sum(', 'avg(', 'max(', 'min(',
             // Add more Laravel specific methods
             'Auth::', 'Cache::', 'Config::', 'Route::', 'Session::', 'Storage::', 'Hash::', 'Validator::', 'Event::', 'Log::'],
+            // تعريف اقتراحات مخصصة حسب السياق
+            contextualSuggestions: {
+                // اقتراحات للنماذج (Models)
+                model: ['all()', 'find()', 'findOrFail()', 'first()', 'firstOrFail()', 'where()', 'whereIn()', 'whereNotIn()', 'whereBetween()', 'whereNotBetween()', 'whereNull()', 'whereNotNull()', 'whereHas()', 'whereDoesntHave()', 'with()', 'has()', 'doesntHave()', 'withCount()', 'orderBy()', 'orderByDesc()', 'latest()', 'oldest()', 'skip()', 'take()', 'offset()', 'limit()', 'get()', 'paginate()', 'simplePaginate()', 'count()', 'max()', 'min()', 'avg()', 'sum()', 'create()', 'update()', 'delete()', 'destroy()', 'save()', 'saveOrFail()', 'push()', 'touch()', 'increment()', 'decrement()', 'replicate()', 'refresh()'],
+                // اقتراحات لـ DB
+                db: ['table()', 'select()', 'selectRaw()', 'from()', 'join()', 'leftJoin()', 'rightJoin()', 'crossJoin()', 'where()', 'whereIn()', 'whereNotIn()', 'whereBetween()', 'whereExists()', 'whereNotExists()', 'whereNull()', 'whereNotNull()', 'orderBy()', 'orderByDesc()', 'groupBy()', 'having()', 'skip()', 'take()', 'offset()', 'limit()', 'get()', 'first()', 'value()', 'count()', 'max()', 'min()', 'avg()', 'sum()', 'insert()', 'update()', 'delete()', 'truncate()', 'transaction()', 'beginTransaction()', 'commit()', 'rollBack()'],
+                // اقتراحات للمجموعات (Collections)
+                collection: ['all()', 'avg()', 'chunk()', 'collapse()', 'collect()', 'combine()', 'concat()', 'contains()', 'containsStrict()', 'count()', 'countBy()', 'diff()', 'diffAssoc()', 'diffKeys()', 'each()', 'every()', 'except()', 'filter()', 'first()', 'firstWhere()', 'flatMap()', 'flatten()', 'flip()', 'forget()', 'forPage()', 'get()', 'groupBy()', 'has()', 'implode()', 'intersect()', 'isEmpty()', 'isNotEmpty()', 'keyBy()', 'keys()', 'last()', 'map()', 'mapInto()', 'mapSpread()', 'mapToGroups()', 'mapWithKeys()', 'max()', 'median()', 'merge()', 'min()', 'mode()', 'nth()', 'only()', 'pad()', 'partition()', 'pipe()', 'pluck()', 'pop()', 'prepend()', 'pull()', 'push()', 'put()', 'random()', 'reduce()', 'reject()', 'reverse()', 'search()', 'shift()', 'shuffle()', 'slice()', 'sort()', 'sortBy()', 'sortByDesc()', 'splice()', 'split()', 'sum()', 'take()', 'tap()', 'times()', 'toArray()', 'toJson()', 'transform()', 'union()', 'unique()', 'uniqueStrict()', 'unless()', 'unlessEmpty()', 'unlessNotEmpty()', 'unwrap()', 'values()', 'when()', 'whenEmpty()', 'whenNotEmpty()', 'where()', 'whereStrict()', 'whereBetween()', 'whereIn()', 'whereInStrict()', 'whereInstanceOf()', 'whereNotBetween()', 'whereNotIn()', 'whereNotInStrict()', 'wrap()', 'zip()']
+            },
             phpClasses: [],
             importedClasses: new Set(),
             lastImportLine: 0,
@@ -2139,26 +2146,263 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             var end = cursor.ch;
             var currentWord = line.slice(start, end).toLowerCase();
 
-            // Combine keywords and class names for suggestions
-            var suggestions = [].concat(_toConsumableArray(this.phpKeywords));
-            this.phpClasses.forEach(function (cls) {
-                suggestions.push(cls.name);
+            // تحليل السياق الحالي للحصول على اقتراحات أكثر دقة
+            var context = this.analyzeContext(editor);
+            var suggestions = [];
+
+            if (context.type) {
+                // إذا كان هناك سياق محدد، استخدم الاقتراحات المناسبة له
+                var contextSuggestions = this.contextualSuggestions[context.type] || [];
+
+                // إضافة اسم الكائن إلى الاقتراحات إذا كان مناسبًا
+                if (context.objectName) {
+                    contextSuggestions.forEach(function (suggestion) {
+                        suggestions.push({
+                            text: suggestion,
+                            displayText: suggestion,
+                            className: 'hint-' + context.type,
+                            render: function render(element, self, data) {
+                                element.innerHTML = '<span class="hint-' + context.type + '">' + data.displayText + '</span>';
+                            }
+                        });
+                    });
+                } else {
+                    contextSuggestions.forEach(function (suggestion) {
+                        suggestions.push({
+                            text: suggestion,
+                            displayText: suggestion,
+                            className: 'hint-' + context.type,
+                            render: function render(element, self, data) {
+                                element.innerHTML = '<span class="hint-' + context.type + '">' + data.displayText + '</span>';
+                            }
+                        });
+                    });
+                }
+            } else {
+                // إذا لم يكن هناك سياق محدد، استخدم الاقتراحات العامة
+
+                // إضافة الكلمات المفتاحية
+                this.phpKeywords.forEach(function (keyword) {
+                    var type = 'default';
+                    if (keyword.includes('::')) {
+                        type = 'facade';
+                    } else if (keyword.includes('->')) {
+                        type = 'collection';
+                    } else if (keyword.includes('(')) {
+                        type = 'db';
+                    }
+
+                    suggestions.push({
+                        text: keyword,
+                        displayText: keyword,
+                        className: 'hint-' + type,
+                        render: function render(element, self, data) {
+                            element.innerHTML = '<span class="hint-' + type + '">' + data.displayText + '</span>';
+                        }
+                    });
+                });
+
+                // إضافة الفئات
+                this.phpClasses.forEach(function (cls) {
+                    suggestions.push({
+                        text: cls.name,
+                        displayText: cls.name,
+                        className: 'hint-class',
+                        render: function render(element, self, data) {
+                            element.innerHTML = '<span class="hint-class">' + data.displayText + '</span>';
+                        }
+                    });
+                });
+            }
+
+            // تصفية الاقتراحات بناءً على الكلمة الحالية
+            var filteredList = suggestions.filter(function (item) {
+                return item.text.toLowerCase().includes(currentWord);
             });
 
-            var list = suggestions.filter(function (item) {
-                return item.toLowerCase().includes(currentWord);
+            // ترتيب الاقتراحات: الفئات أولاً، ثم الواجهات، ثم الأساليب
+            filteredList.sort(function (a, b) {
+                // الفئات أولاً
+                if (a.className === 'hint-class' && b.className !== 'hint-class') return -1;
+                if (a.className !== 'hint-class' && b.className === 'hint-class') return 1;
+
+                // ثم الواجهات
+                if (a.className === 'hint-facade' && b.className !== 'hint-facade') return -1;
+                if (a.className !== 'hint-facade' && b.className === 'hint-facade') return 1;
+
+                // ثم ترتيب أبجدي
+                return a.text.localeCompare(b.text);
             });
 
             editor.showHint({
                 completeSingle: false,
                 hint: function hint() {
                     return {
-                        list: list,
+                        list: filteredList,
                         from: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, start),
                         to: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, end)
                     };
                 }
             });
+        },
+
+
+        // تحليل السياق الحالي لتحديد نوع الاقتراحات المناسبة
+        analyzeContext: function analyzeContext(editor) {
+            var cursor = editor.getCursor();
+            var line = editor.getLine(cursor.line);
+            var lineUntilCursor = line.substring(0, cursor.ch);
+
+            // البحث عن نمط "->", "::" أو "."
+            var arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
+            var staticMatch = lineUntilCursor.match(/(\w+)\s*::$/);
+            var dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
+
+            // تحقق من وجود نمط "Model::" (مثل User::)
+            if (staticMatch) {
+                var className = staticMatch[1];
+
+                // تحقق من أنواع خاصة مثل DB, Auth, etc.
+                var specialFacades = ['DB', 'Auth', 'Cache', 'Config', 'Route', 'Session', 'Storage', 'Hash', 'Validator', 'Event', 'Log'];
+                if (specialFacades.includes(className)) {
+                    return { type: 'db', objectName: className };
+                }
+
+                // تحقق مما إذا كان اسم فئة (يبدأ بحرف كبير)
+                if (/^[A-Z]/.test(className)) {
+                    // تحقق مما إذا كان نموذجًا (Model)
+                    var classInfo = this.phpClasses.find(function (cls) {
+                        return cls.name === className;
+                    });
+                    if (classInfo && classInfo.namespace.includes('\\Models\\')) {
+                        return { type: 'model', objectName: className };
+                    }
+                    return { type: 'model', objectName: className };
+                }
+            }
+
+            // تحقق من وجود نمط "->method" (مثل $users->)
+            if (arrowMatch) {
+                var variableName = arrowMatch[1];
+
+                // تحقق من السياق السابق لتحديد نوع المتغير
+                var contextType = this.determineVariableType(editor, variableName);
+                return { type: contextType, objectName: variableName };
+            }
+
+            // تحقق من وجود نمط "." (للسلاسل النصية أو المصفوفات)
+            if (dotMatch) {
+                return { type: 'collection', objectName: dotMatch[1] };
+            }
+
+            // لا يوجد سياق محدد
+            return { type: null, objectName: null };
+        },
+
+
+        // تحديد نوع المتغير بناءً على السياق
+        determineVariableType: function determineVariableType(editor, variableName) {
+            // البحث عن تعريف المتغير في النص
+            var content = editor.getValue();
+
+            // تنظيف اسم المتغير (إزالة $ إذا كان موجودًا)
+            var cleanVarName = variableName.replace('$', '');
+
+            // تحقق مما إذا كان المتغير هو نتيجة استدعاء نموذج
+            var modelPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::(all|get|find|where|first)', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::where', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->where', 'i')];
+
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = modelPatterns[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var pattern = _step.value;
+
+                    if (pattern.test(content)) {
+                        return 'collection';
+                    }
+                }
+
+                // تحقق مما إذا كان المتغير هو نتيجة استدعاء DB
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            var dbPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*DB::(table|select)', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->join', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->select', 'i')];
+
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = dbPatterns[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var _pattern = _step2.value;
+
+                    if (_pattern.test(content)) {
+                        return 'db';
+                    }
+                }
+
+                // تحقق مما إذا كان المتغير هو كائن نموذج فردي
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
+            }
+
+            var singleModelPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::find\\(', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::findOrFail\\(', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::first\\(', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*new\\s+\\w+\\(', 'i')];
+
+            var _iteratorNormalCompletion3 = true;
+            var _didIteratorError3 = false;
+            var _iteratorError3 = undefined;
+
+            try {
+                for (var _iterator3 = singleModelPatterns[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                    var _pattern2 = _step3.value;
+
+                    if (_pattern2.test(content)) {
+                        return 'model';
+                    }
+                }
+
+                // افتراضيًا، اعتبره مجموعة
+            } catch (err) {
+                _didIteratorError3 = true;
+                _iteratorError3 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                        _iterator3.return();
+                    }
+                } finally {
+                    if (_didIteratorError3) {
+                        throw _iteratorError3;
+                    }
+                }
+            }
+
+            return 'collection';
         },
         autoShowHints: function autoShowHints(editor) {
             var cursor = editor.getCursor();
@@ -16836,7 +17080,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "\n.CodeMirror {\n  height: 100%;\n  width: 100%;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 14px;\n  line-height: 1.5;\n}\n.input {\n  height: 100%;\n  width: 100%;\n}\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 3px;\n  border: 1px solid silver;\n  background: white;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n.CodeMirror-import-tooltip {\n  background: rgba(44, 62, 80, .9);\n  color: white;\n  padding: 5px 10px;\n  border-radius: 3px;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 12px;\n  display: inline-block;\n  margin-left: 20px;\n  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n          box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n}\n.import-link {\n  color: #2ecc71;\n  text-decoration: none;\n  margin-left: 8px;\n  font-weight: bold;\n}\n.import-link:hover {\n  text-decoration: underline;\n}\n", ""]);
+exports.push([module.i, "\n.CodeMirror {\n  height: 100%;\n  width: 100%;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 14px;\n  line-height: 1.5;\n}\n.input {\n  height: 100%;\n  width: 100%;\n}\n.CodeMirror-hints {\n  position: absolute;\n  z-index: 1000;\n  overflow: hidden;\n  list-style: none;\n  margin: 0;\n  padding: 2px;\n  border-radius: 5px;\n  border: 1px solid #44475a;\n  background: #282a36;\n  font-size: 90%;\n  max-height: 20em;\n  overflow-y: auto;\n  -webkit-box-shadow: 0 4px 10px rgba(0, 0, 0, .3);\n          box-shadow: 0 4px 10px rgba(0, 0, 0, .3);\n}\n.CodeMirror-hint {\n  margin: 0;\n  padding: 5px 10px;\n  border-radius: 3px;\n  white-space: pre;\n  color: #f8f8f2;\n  cursor: pointer;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  -webkit-transition: background .2s ease;\n          transition: background .2s ease;\n}\nli.CodeMirror-hint-active {\n  background: #6272a4;\n  color: #f8f8f2;\n}\n\n/* تصنيف الاقتراحات حسب النوع */\n.hint-model {\n  color: #ff79c6;\n}\n.hint-db {\n  color: #8be9fd;\n}\n.hint-collection {\n  color: #50fa7b;\n}\n.hint-class {\n  color: #bd93f9;\n}\n.hint-facade {\n  color: #ffb86c;\n}\n.CodeMirror-import-tooltip {\n  background: rgba(44, 62, 80, .9);\n  color: white;\n  padding: 5px 10px;\n  border-radius: 3px;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: 12px;\n  display: inline-block;\n  margin-left: 20px;\n  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n          box-shadow: 0 2px 5px rgba(0, 0, 0, .2);\n}\n.import-link {\n  color: #2ecc71;\n  text-decoration: none;\n  margin-left: 8px;\n  font-weight: bold;\n}\n.import-link:hover {\n  text-decoration: underline;\n}\n", ""]);
 
 // exports
 

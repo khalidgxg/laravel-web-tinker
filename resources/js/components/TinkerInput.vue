@@ -33,6 +33,59 @@ export default {
             'Auth::', 'Cache::', 'Config::', 'Route::', 'Session::',
             'Storage::', 'Hash::', 'Validator::', 'Event::', 'Log::'
         ],
+        // تعريف اقتراحات مخصصة حسب السياق
+        contextualSuggestions: {
+            // اقتراحات للنماذج (Models)
+            model: [
+                'all()', 'find()', 'findOrFail()', 'first()', 'firstOrFail()',
+                'where()', 'whereIn()', 'whereNotIn()', 'whereBetween()', 'whereNotBetween()',
+                'whereNull()', 'whereNotNull()', 'whereHas()', 'whereDoesntHave()',
+                'with()', 'has()', 'doesntHave()', 'withCount()',
+                'orderBy()', 'orderByDesc()', 'latest()', 'oldest()',
+                'skip()', 'take()', 'offset()', 'limit()',
+                'get()', 'paginate()', 'simplePaginate()', 'count()',
+                'max()', 'min()', 'avg()', 'sum()',
+                'create()', 'update()', 'delete()', 'destroy()',
+                'save()', 'saveOrFail()', 'push()', 'touch()',
+                'increment()', 'decrement()', 'replicate()', 'refresh()'
+            ],
+            // اقتراحات لـ DB
+            db: [
+                'table()', 'select()', 'selectRaw()', 'from()',
+                'join()', 'leftJoin()', 'rightJoin()', 'crossJoin()',
+                'where()', 'whereIn()', 'whereNotIn()', 'whereBetween()',
+                'whereExists()', 'whereNotExists()', 'whereNull()', 'whereNotNull()',
+                'orderBy()', 'orderByDesc()', 'groupBy()', 'having()',
+                'skip()', 'take()', 'offset()', 'limit()',
+                'get()', 'first()', 'value()', 'count()',
+                'max()', 'min()', 'avg()', 'sum()',
+                'insert()', 'update()', 'delete()', 'truncate()',
+                'transaction()', 'beginTransaction()', 'commit()', 'rollBack()'
+            ],
+            // اقتراحات للمجموعات (Collections)
+            collection: [
+                'all()', 'avg()', 'chunk()', 'collapse()', 'collect()',
+                'combine()', 'concat()', 'contains()', 'containsStrict()',
+                'count()', 'countBy()', 'diff()', 'diffAssoc()', 'diffKeys()',
+                'each()', 'every()', 'except()', 'filter()', 'first()',
+                'firstWhere()', 'flatMap()', 'flatten()', 'flip()', 'forget()',
+                'forPage()', 'get()', 'groupBy()', 'has()', 'implode()',
+                'intersect()', 'isEmpty()', 'isNotEmpty()', 'keyBy()', 'keys()',
+                'last()', 'map()', 'mapInto()', 'mapSpread()', 'mapToGroups()',
+                'mapWithKeys()', 'max()', 'median()', 'merge()', 'min()',
+                'mode()', 'nth()', 'only()', 'pad()', 'partition()',
+                'pipe()', 'pluck()', 'pop()', 'prepend()', 'pull()',
+                'push()', 'put()', 'random()', 'reduce()', 'reject()',
+                'reverse()', 'search()', 'shift()', 'shuffle()', 'slice()',
+                'sort()', 'sortBy()', 'sortByDesc()', 'splice()', 'split()',
+                'sum()', 'take()', 'tap()', 'times()', 'toArray()',
+                'toJson()', 'transform()', 'union()', 'unique()', 'uniqueStrict()',
+                'unless()', 'unlessEmpty()', 'unlessNotEmpty()', 'unwrap()', 'values()',
+                'when()', 'whenEmpty()', 'whenNotEmpty()', 'where()', 'whereStrict()',
+                'whereBetween()', 'whereIn()', 'whereInStrict()', 'whereInstanceOf()', 'whereNotBetween()',
+                'whereNotIn()', 'whereNotInStrict()', 'wrap()', 'zip()'
+            ]
+        },
         phpClasses: [],
         importedClasses: new Set(),
         lastImportLine: 0,
@@ -187,24 +240,204 @@ export default {
             const end = cursor.ch;
             const currentWord = line.slice(start, end).toLowerCase();
 
-            // Combine keywords and class names for suggestions
-            let suggestions = [...this.phpKeywords];
-            this.phpClasses.forEach(cls => {
-                suggestions.push(cls.name);
-            });
+            // تحليل السياق الحالي للحصول على اقتراحات أكثر دقة
+            const context = this.analyzeContext(editor);
+            let suggestions = [];
 
-            const list = suggestions.filter(item =>
-                item.toLowerCase().includes(currentWord)
+            if (context.type) {
+                // إذا كان هناك سياق محدد، استخدم الاقتراحات المناسبة له
+                const contextSuggestions = this.contextualSuggestions[context.type] || [];
+
+                // إضافة اسم الكائن إلى الاقتراحات إذا كان مناسبًا
+                if (context.objectName) {
+                    contextSuggestions.forEach(suggestion => {
+                        suggestions.push({
+                            text: suggestion,
+                            displayText: suggestion,
+                            className: `hint-${context.type}`,
+                            render: (element, self, data) => {
+                                element.innerHTML = `<span class="hint-${context.type}">${data.displayText}</span>`;
+                            }
+                        });
+                    });
+                } else {
+                    contextSuggestions.forEach(suggestion => {
+                        suggestions.push({
+                            text: suggestion,
+                            displayText: suggestion,
+                            className: `hint-${context.type}`,
+                            render: (element, self, data) => {
+                                element.innerHTML = `<span class="hint-${context.type}">${data.displayText}</span>`;
+                            }
+                        });
+                    });
+                }
+            } else {
+                // إذا لم يكن هناك سياق محدد، استخدم الاقتراحات العامة
+
+                // إضافة الكلمات المفتاحية
+                this.phpKeywords.forEach(keyword => {
+                    let type = 'default';
+                    if (keyword.includes('::')) {
+                        type = 'facade';
+                    } else if (keyword.includes('->')) {
+                        type = 'collection';
+                    } else if (keyword.includes('(')) {
+                        type = 'db';
+                    }
+
+                    suggestions.push({
+                        text: keyword,
+                        displayText: keyword,
+                        className: `hint-${type}`,
+                        render: (element, self, data) => {
+                            element.innerHTML = `<span class="hint-${type}">${data.displayText}</span>`;
+                        }
+                    });
+                });
+
+                // إضافة الفئات
+                this.phpClasses.forEach(cls => {
+                    suggestions.push({
+                        text: cls.name,
+                        displayText: cls.name,
+                        className: 'hint-class',
+                        render: (element, self, data) => {
+                            element.innerHTML = `<span class="hint-class">${data.displayText}</span>`;
+                        }
+                    });
+                });
+            }
+
+            // تصفية الاقتراحات بناءً على الكلمة الحالية
+            const filteredList = suggestions.filter(item =>
+                item.text.toLowerCase().includes(currentWord)
             );
+
+            // ترتيب الاقتراحات: الفئات أولاً، ثم الواجهات، ثم الأساليب
+            filteredList.sort((a, b) => {
+                // الفئات أولاً
+                if (a.className === 'hint-class' && b.className !== 'hint-class') return -1;
+                if (a.className !== 'hint-class' && b.className === 'hint-class') return 1;
+
+                // ثم الواجهات
+                if (a.className === 'hint-facade' && b.className !== 'hint-facade') return -1;
+                if (a.className !== 'hint-facade' && b.className === 'hint-facade') return 1;
+
+                // ثم ترتيب أبجدي
+                return a.text.localeCompare(b.text);
+            });
 
             editor.showHint({
                 completeSingle: false,
                 hint: () => ({
-                    list: list,
+                    list: filteredList,
                     from: CodeMirror.Pos(cursor.line, start),
                     to: CodeMirror.Pos(cursor.line, end)
                 })
             });
+        },
+
+        // تحليل السياق الحالي لتحديد نوع الاقتراحات المناسبة
+        analyzeContext(editor) {
+            const cursor = editor.getCursor();
+            const line = editor.getLine(cursor.line);
+            const lineUntilCursor = line.substring(0, cursor.ch);
+
+            // البحث عن نمط "->", "::" أو "."
+            const arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
+            const staticMatch = lineUntilCursor.match(/(\w+)\s*::$/);
+            const dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
+
+            // تحقق من وجود نمط "Model::" (مثل User::)
+            if (staticMatch) {
+                const className = staticMatch[1];
+
+                // تحقق من أنواع خاصة مثل DB, Auth, etc.
+                const specialFacades = ['DB', 'Auth', 'Cache', 'Config', 'Route', 'Session', 'Storage', 'Hash', 'Validator', 'Event', 'Log'];
+                if (specialFacades.includes(className)) {
+                    return { type: 'db', objectName: className };
+                }
+
+                // تحقق مما إذا كان اسم فئة (يبدأ بحرف كبير)
+                if (/^[A-Z]/.test(className)) {
+                    // تحقق مما إذا كان نموذجًا (Model)
+                    const classInfo = this.phpClasses.find(cls => cls.name === className);
+                    if (classInfo && classInfo.namespace.includes('\\Models\\')) {
+                        return { type: 'model', objectName: className };
+                    }
+                    return { type: 'model', objectName: className };
+                }
+            }
+
+            // تحقق من وجود نمط "->method" (مثل $users->)
+            if (arrowMatch) {
+                const variableName = arrowMatch[1];
+
+                // تحقق من السياق السابق لتحديد نوع المتغير
+                const contextType = this.determineVariableType(editor, variableName);
+                return { type: contextType, objectName: variableName };
+            }
+
+            // تحقق من وجود نمط "." (للسلاسل النصية أو المصفوفات)
+            if (dotMatch) {
+                return { type: 'collection', objectName: dotMatch[1] };
+            }
+
+            // لا يوجد سياق محدد
+            return { type: null, objectName: null };
+        },
+
+        // تحديد نوع المتغير بناءً على السياق
+        determineVariableType(editor, variableName) {
+            // البحث عن تعريف المتغير في النص
+            const content = editor.getValue();
+
+            // تنظيف اسم المتغير (إزالة $ إذا كان موجودًا)
+            const cleanVarName = variableName.replace('$', '');
+
+            // تحقق مما إذا كان المتغير هو نتيجة استدعاء نموذج
+            const modelPatterns = [
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\w+::(all|get|find|where|first)`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\w+::where`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\$?\\w+->where`, 'i')
+            ];
+
+            for (const pattern of modelPatterns) {
+                if (pattern.test(content)) {
+                    return 'collection';
+                }
+            }
+
+            // تحقق مما إذا كان المتغير هو نتيجة استدعاء DB
+            const dbPatterns = [
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*DB::(table|select)`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\$?\\w+->join`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\$?\\w+->select`, 'i')
+            ];
+
+            for (const pattern of dbPatterns) {
+                if (pattern.test(content)) {
+                    return 'db';
+                }
+            }
+
+            // تحقق مما إذا كان المتغير هو كائن نموذج فردي
+            const singleModelPatterns = [
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\w+::find\\(`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\w+::findOrFail\\(`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*\\w+::first\\(`, 'i'),
+                new RegExp(`\\$?${cleanVarName}\\s*=\\s*new\\s+\\w+\\(`, 'i')
+            ];
+
+            for (const pattern of singleModelPatterns) {
+                if (pattern.test(content)) {
+                    return 'model';
+                }
+            }
+
+            // افتراضيًا، اعتبره مجموعة
+            return 'collection';
         },
 
         autoShowHints(editor) {
@@ -385,26 +618,50 @@ export default {
     list-style: none;
     margin: 0;
     padding: 2px;
-    border-radius: 3px;
-    border: 1px solid silver;
-    background: white;
+    border-radius: 5px;
+    border: 1px solid #44475a;
+    background: #282a36;
     font-size: 90%;
     max-height: 20em;
     overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
 .CodeMirror-hint {
     margin: 0;
-    padding: 0 4px;
-    border-radius: 2px;
+    padding: 5px 10px;
+    border-radius: 3px;
     white-space: pre;
-    color: black;
+    color: #f8f8f2;
     cursor: pointer;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    transition: background 0.2s ease;
 }
 
 li.CodeMirror-hint-active {
-    background: #08f;
-    color: white;
+    background: #6272a4;
+    color: #f8f8f2;
+}
+
+/* تصنيف الاقتراحات حسب النوع */
+.hint-model {
+    color: #ff79c6;
+}
+
+.hint-db {
+    color: #8be9fd;
+}
+
+.hint-collection {
+    color: #50fa7b;
+}
+
+.hint-class {
+    color: #bd93f9;
+}
+
+.hint-facade {
+    color: #ffb86c;
 }
 
 .CodeMirror-import-tooltip {
