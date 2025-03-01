@@ -56,6 +56,7 @@ class WebTinkerController
 
         // Common Laravel classes
         $laravelClasses = [
+            ['name' => 'User', 'namespace' => 'App\\Models\\User'],
             ['name' => 'Auth', 'namespace' => 'Illuminate\\Support\\Facades\\Auth'],
             ['name' => 'DB', 'namespace' => 'Illuminate\\Support\\Facades\\DB'],
             ['name' => 'Route', 'namespace' => 'Illuminate\\Support\\Facades\\Route'],
@@ -74,67 +75,77 @@ class WebTinkerController
 
         $result = array_merge($result, $laravelClasses);
 
-        // Scan app/Models directory for model classes
-        $modelsPath = app_path('Models');
-        if (File::isDirectory($modelsPath)) {
-            $modelFiles = File::files($modelsPath);
+        try {
+            // Scan app/Models directory for model classes
+            $modelsPath = app_path('Models');
+            if (File::isDirectory($modelsPath)) {
+                $modelFiles = File::files($modelsPath);
 
-            foreach ($modelFiles as $file) {
-                $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                if ($className && $className !== 'index') {
-                    $result[] = [
-                        'name' => $className,
-                        'namespace' => 'App\\Models\\' . $className
-                    ];
-                }
-            }
-        }
-
-        // Legacy app directory models
-        $legacyModelsPath = app_path();
-        if (File::isDirectory($legacyModelsPath)) {
-            $modelFiles = File::files($legacyModelsPath);
-
-            foreach ($modelFiles as $file) {
-                $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                if ($className && $className !== 'index' &&
-                    !in_array($className, ['User', 'Console', 'Exceptions', 'Http', 'Providers'])) {
-                    $result[] = [
-                        'name' => $className,
-                        'namespace' => 'App\\' . $className
-                    ];
-                }
-            }
-        }
-
-        // Get all loaded classes
-        $loadedClasses = get_declared_classes();
-        foreach ($loadedClasses as $class) {
-            // Only include App namespace classes
-            if (strpos($class, 'App\\') === 0) {
-                $parts = explode('\\', $class);
-                $className = end($parts);
-
-                // Check if class already exists in result
-                $exists = false;
-                foreach ($result as $item) {
-                    if ($item['name'] === $className) {
-                        $exists = true;
-                        break;
+                foreach ($modelFiles as $file) {
+                    $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                    if ($className && $className !== 'index' && substr($className, 0, 1) !== '.') {
+                        $result[] = [
+                            'name' => $className,
+                            'namespace' => 'App\\Models\\' . $className
+                        ];
                     }
                 }
+            }
 
-                if (!$exists) {
-                    $result[] = [
-                        'name' => $className,
-                        'namespace' => $class
-                    ];
+            // Legacy app directory models
+            $legacyModelsPath = app_path();
+            if (File::isDirectory($legacyModelsPath)) {
+                $modelFiles = File::files($legacyModelsPath);
+
+                foreach ($modelFiles as $file) {
+                    $className = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                    if ($className && $className !== 'index' &&
+                        !in_array($className, ['User', 'Console', 'Exceptions', 'Http', 'Providers']) &&
+                        substr($className, 0, 1) !== '.' &&
+                        substr($file->getFilename(), -4) === '.php') {
+                        $result[] = [
+                            'name' => $className,
+                            'namespace' => 'App\\' . $className
+                        ];
+                    }
                 }
             }
+
+            // Get all loaded classes
+            $loadedClasses = get_declared_classes();
+            foreach ($loadedClasses as $class) {
+                // Only include App namespace classes
+                if (strpos($class, 'App\\') === 0) {
+                    $parts = explode('\\', $class);
+                    $className = end($parts);
+
+                    // Check if class already exists in result
+                    $exists = false;
+                    foreach ($result as $item) {
+                        if ($item['name'] === $className) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!$exists) {
+                        $result[] = [
+                            'name' => $className,
+                            'namespace' => $class
+                        ];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but continue with default classes
+            \Log::error('Error scanning for classes: ' . $e->getMessage());
         }
 
         return response()->json([
-            'classes' => $result
+            'classes' => $result,
+            'count' => count($result),
+            'app_path' => app_path(),
+            'version' => '1.0.1'
         ]);
     }
 }

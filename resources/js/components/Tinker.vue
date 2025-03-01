@@ -1,9 +1,18 @@
 <template>
-    <main :class="['layout', { 'layout-columns': needsColumnLayout }]" :style="gridStyle">
-        <tinker-input v-model="input" :path="path" @execute="handleExecute"></tinker-input>
-        <hr ref="gutter" class="layout-gutter" />
-        <tinker-output :value="output"></tinker-output>
-    </main>
+    <div class="tinker">
+        <div class="tinker__status" v-if="isLoading">
+            <span class="tinker__status-text">Loading classes...</span>
+        </div>
+        <div class="split-view">
+            <TinkerInput
+                :path="path"
+                @execute="executeCode"
+                ref="tinkerInput"
+                @loading-status="updateLoadingStatus"
+            />
+            <div class="output" v-html="output"></div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -27,6 +36,7 @@ export default {
         breakpoint: 768,
         input: '',
         output: '<span class="text-dimmed">// Use cmd+enter or ctrl+enter to run.</span>',
+        isLoading: false
     }),
 
     computed: {
@@ -56,8 +66,12 @@ export default {
     },
 
     methods: {
-        handleExecute(output) {
+        executeCode(output) {
             this.output = DOMPurify.sanitize(output);
+        },
+
+        updateLoadingStatus(status) {
+            this.isLoading = status;
         },
 
         initSplit() {

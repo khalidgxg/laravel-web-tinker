@@ -94,16 +94,35 @@ export default {
     methods: {
         loadAvailableClasses() {
             this.isLoadingClasses = true;
+            this.$emit('loading-status', true);
 
-            // Get the base URL from the path prop
-            const baseUrl = this.path.substring(0, this.path.lastIndexOf('/'));
-            const classesUrl = `${baseUrl}/classes`;
+            // Fix URL construction to ensure it works in all environments
+            let classesUrl;
+            if (this.path.includes('/')) {
+                // Extract base URL more reliably
+                const pathParts = this.path.split('/');
+                pathParts.pop(); // Remove the last segment
+                classesUrl = pathParts.join('/') + '/classes';
+            } else {
+                // Fallback
+                classesUrl = '/tinker/classes';
+            }
+
+            console.log('Loading classes from:', classesUrl);
 
             axios.get(classesUrl)
                 .then(response => {
                     if (response.data && response.data.classes) {
                         this.phpClasses = response.data.classes;
                         console.log('Loaded classes:', this.phpClasses.length);
+
+                        if (response.data.count) {
+                            console.log('Total classes:', response.data.count);
+                        }
+
+                        if (response.data.app_path) {
+                            console.log('App path:', response.data.app_path);
+                        }
                     }
                 })
                 .catch(error => {
@@ -113,6 +132,7 @@ export default {
                 })
                 .finally(() => {
                     this.isLoadingClasses = false;
+                    this.$emit('loading-status', false);
                 });
         },
 
