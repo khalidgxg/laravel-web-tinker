@@ -2076,6 +2076,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
         // Load available classes from the server
         this.loadAvailableClasses();
+
+        // إضافة أنماط CSS مخصصة لتحسين مظهر الاقتراحات
+        var style = document.createElement('style');
+        style.textContent = '\n            .CodeMirror-hints {\n                position: absolute;\n                z-index: 10;\n                overflow: hidden;\n                list-style: none;\n                margin: 0;\n                padding: 2px;\n                border-radius: 4px;\n                border: 1px solid #ddd;\n                background: #232836;\n                box-shadow: 0 4px 8px rgba(0,0,0,0.3);\n                max-height: 20em;\n                overflow-y: auto;\n                font-family: monospace;\n                font-size: 14px;\n            }\n\n            .CodeMirror-hint {\n                margin: 0;\n                padding: 4px 8px;\n                border-radius: 2px;\n                white-space: pre;\n                color: #e6e6e6;\n                cursor: pointer;\n            }\n\n            li.CodeMirror-hint-active {\n                background-color: #4d78cc;\n                color: white;\n            }\n\n            .CodeMirror-hint-class {\n                color: #4EC9B0;\n            }\n\n            .CodeMirror-hint-method {\n                color: #DCDCAA;\n            }\n\n            .CodeMirror-hint-property {\n                color: #9CDCFE;\n            }\n\n            .CodeMirror-hint-variable {\n                color: #9CDCFE;\n            }\n\n            .CodeMirror-hint-function {\n                color: #DCDCAA;\n            }\n\n            .CodeMirror-hint-keyword {\n                color: #569CD6;\n            }\n        ';
+        document.head.appendChild(style);
     },
 
 
@@ -2138,303 +2143,157 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 _this3.$emit('execute', data);
             });
         },
-        showHints: function showHints(editor) {
-            var cursor = editor.getCursor();
-            var token = editor.getTokenAt(cursor);
-            var line = editor.getLine(cursor.line);
-            var start = token.start;
-            var end = cursor.ch;
-            var currentWord = line.slice(start, end).toLowerCase();
+        showHints: function showHints(cm, options) {
+            console.log('showHints called with options:', options);
 
-            console.log('Current word:', currentWord);
-            console.log('Token:', token);
+            var cursor = cm.getCursor();
+            var token = cm.getTokenAt(cursor);
+            var line = cm.getLine(cursor.line);
+            var currentWord = token.string;
 
-            // تحليل السياق الحالي
-            var context = this.analyzeContext(editor);
-            console.log('Context:', context);
+            console.log('Current token:', token);
+            console.log('Current line:', line);
+
+            // تحليل السياق لتحديد نوع الاقتراحات المناسبة
+            var context = this.analyzeContext(cm, cursor, line, token);
+            console.log('Context analysis result:', context);
 
             var list = [];
 
-            // إذا كان هناك سياق محدد (مثل User:: أو DB::)
-            if (context.type === 'model') {
-                // اقتراحات خاصة بالنماذج
-                list = this.contextualSuggestions.model.map(function (item) {
+            if (context.type === 'static-method' && context.class) {
+                // اقتراحات للطرق الثابتة للفئة
+                list = this.getStaticMethodSuggestions(context.class);
+            } else if (context.type === 'method' && context.variable) {
+                // اقتراحات للطرق على متغير
+                var varType = this.determineVariableType(cm, context.variable);
+                list = this.getMethodSuggestions(varType);
+            } else if (context.type === 'class') {
+                // اقتراحات للفئات
+                list = this.phpClasses.map(function (cls) {
                     return {
-                        text: item,
-                        displayText: item,
-                        className: 'hint-model',
-                        render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-model">' + data.displayText + '</span>';
-                        }
+                        text: cls,
+                        displayText: cls,
+                        className: 'CodeMirror-hint-class',
+                        type: 'class'
                     };
                 });
-                console.log('Showing model suggestions:', list.length);
-            } else if (context.type === 'db') {
-                // اقتراحات خاصة بقاعدة البيانات
-                list = this.contextualSuggestions.db.map(function (item) {
-                    return {
-                        text: item,
-                        displayText: item,
-                        className: 'hint-db',
-                        render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-db">' + data.displayText + '</span>';
-                        }
-                    };
-                });
-                console.log('Showing DB suggestions:', list.length);
-            } else if (context.type === 'collection') {
-                // اقتراحات خاصة بالمجموعات
-                list = this.contextualSuggestions.collection.map(function (item) {
-                    return {
-                        text: item,
-                        displayText: item,
-                        className: 'hint-collection',
-                        render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-collection">' + data.displayText + '</span>';
-                        }
-                    };
-                });
-                console.log('Showing collection suggestions:', list.length);
+            } else if (context.type === 'variable') {
+                // اقتراحات للمتغيرات
+                list = this.getVariableSuggestions();
+            } else if (context.type === 'function') {
+                // اقتراحات للدوال
+                list = this.getFunctionSuggestions();
             } else {
-                // اقتراحات عامة (فقط إذا لم يكن هناك سياق محدد)
-
-                // إضافة الفئات
-                this.phpClasses.forEach(function (cls) {
-                    list.push({
-                        text: cls.name,
-                        displayText: cls.name,
-                        className: 'hint-class',
-                        render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-class">' + data.displayText + '</span>';
-                        }
-                    });
-                });
-
-                // إضافة الكلمات المفتاحية
-                this.phpKeywords.forEach(function (keyword) {
-                    var type = 'default';
-                    if (keyword.includes('::')) {
-                        type = 'facade';
-                    } else if (keyword.includes('->')) {
-                        type = 'collection';
-                    } else if (keyword.includes('(')) {
-                        type = 'db';
-                    }
-
-                    list.push({
-                        text: keyword,
-                        displayText: keyword,
-                        className: 'hint-' + type,
-                        render: function render(element, self, data) {
-                            element.innerHTML = '<span class="hint-' + type + '">' + data.displayText + '</span>';
-                        }
-                    });
-                });
-
-                console.log('Showing general suggestions:', list.length);
+                // اقتراحات عامة
+                list = this.getGeneralSuggestions();
             }
 
             // تصفية الاقتراحات بناءً على الكلمة الحالية
-            if (currentWord) {
+            if (currentWord && currentWord !== '::' && currentWord !== '->') {
                 list = list.filter(function (item) {
-                    return item.text.toLowerCase().includes(currentWord);
-                });
-                console.log('Filtered suggestions:', list.length);
-            }
-
-            // عرض الاقتراحات فقط إذا كان هناك اقتراحات
-            if (list.length > 0) {
-                editor.showHint({
-                    completeSingle: false,
-                    hint: function hint() {
-                        return {
-                            list: list,
-                            from: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, start),
-                            to: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, end)
-                        };
-                    }
+                    return item.text.toLowerCase().startsWith(currentWord.toLowerCase());
                 });
             }
+
+            console.log('Filtered suggestions list:', list);
+
+            if (list.length === 0) {
+                console.log('No suggestions available, falling back to default suggestions');
+                list = this.getGeneralSuggestions();
+
+                if (currentWord && currentWord !== '::' && currentWord !== '->') {
+                    list = list.filter(function (item) {
+                        return item.text.toLowerCase().startsWith(currentWord.toLowerCase());
+                    });
+                }
+            }
+
+            return {
+                list: list,
+                from: { line: cursor.line, ch: token.start },
+                to: { line: cursor.line, ch: token.end }
+            };
         },
+        analyzeContext: function analyzeContext(cm, cursor, line, token) {
+            console.log('Analyzing context at cursor:', cursor);
+            console.log('Token:', token);
 
-
-        // تحليل السياق الحالي لتحديد نوع الاقتراحات المناسبة
-        analyzeContext: function analyzeContext(editor) {
-            var cursor = editor.getCursor();
-            var line = editor.getLine(cursor.line);
-            var lineUntilCursor = line.substring(0, cursor.ch);
-
-            console.log('Analyzing context for line:', lineUntilCursor);
-
-            // البحث عن نمط "::" (مثل User::)
-            var staticMatch = lineUntilCursor.match(/(\w+)\s*::$/);
-            if (staticMatch) {
-                var className = staticMatch[1];
-                console.log('Found static match:', className);
-
-                // تحقق من أنواع خاصة مثل DB, Auth, etc.
-                var specialFacades = ['DB', 'Auth', 'Cache', 'Config', 'Route', 'Session', 'Storage', 'Hash', 'Validator', 'Event', 'Log'];
-                if (specialFacades.includes(className)) {
-                    console.log('Detected special facade:', className);
-                    return { type: 'db', objectName: className };
-                }
-
-                // تحقق مما إذا كان اسم فئة (يبدأ بحرف كبير)
-                if (/^[A-Z]/.test(className)) {
-                    console.log('Detected model class:', className);
-                    return { type: 'model', objectName: className };
-                }
+            // تحقق من وجود :: قبل الموضع الحالي (للطرق الثابتة)
+            var staticMethodMatch = line.substring(0, cursor.ch).match(/(\w+)::(\w*)$/);
+            if (staticMethodMatch) {
+                console.log('Static method context detected:', staticMethodMatch[1]);
+                return {
+                    type: 'static-method',
+                    class: staticMethodMatch[1],
+                    prefix: staticMethodMatch[2]
+                };
             }
 
-            // البحث عن نمط "->" (مثل $users->)
-            var arrowMatch = lineUntilCursor.match(/(\$\w+|\w+)\s*->$/);
-            if (arrowMatch) {
-                var variableName = arrowMatch[1];
-                console.log('Found arrow match:', variableName);
-
-                // تحقق من السياق السابق لتحديد نوع المتغير
-                var contextType = this.determineVariableType(editor, variableName);
-                console.log('Determined variable type:', contextType);
-                return { type: contextType, objectName: variableName };
+            // تحقق من وجود -> قبل الموضع الحالي (للطرق)
+            var methodMatch = line.substring(0, cursor.ch).match(/(\$\w+)->(\w*)$/);
+            if (methodMatch) {
+                console.log('Method context detected for variable:', methodMatch[1]);
+                return {
+                    type: 'method',
+                    variable: methodMatch[1],
+                    prefix: methodMatch[2]
+                };
             }
 
-            // البحث عن نمط "." (مثل $array.)
-            var dotMatch = lineUntilCursor.match(/(\w+)\s*\.$/);
-            if (dotMatch) {
-                console.log('Found dot match:', dotMatch[1]);
-                return { type: 'collection', objectName: dotMatch[1] };
+            // تحقق مما إذا كان المستخدم يكتب اسم فئة
+            if (token.type === 'variable-2' || token.string.match(/^[A-Z]\w*$/)) {
+                console.log('Class name context detected');
+                return {
+                    type: 'class',
+                    prefix: token.string
+                };
             }
 
-            // لا يوجد سياق محدد
-            console.log('No specific context detected');
-            return { type: null, objectName: null };
+            // تحقق مما إذا كان المستخدم يكتب متغيرًا
+            if (token.string.startsWith('$')) {
+                console.log('Variable context detected');
+                return {
+                    type: 'variable',
+                    prefix: token.string
+                };
+            }
+
+            // السياق الافتراضي
+            console.log('Default/general context');
+            return {
+                type: 'general',
+                prefix: token.string
+            };
         },
-
-
-        // تحديد نوع المتغير بناءً على السياق
-        determineVariableType: function determineVariableType(editor, variableName) {
-            // البحث عن تعريف المتغير في النص
-            var content = editor.getValue();
-
-            // تنظيف اسم المتغير (إزالة $ إذا كان موجودًا)
-            var cleanVarName = variableName.replace(/^\$/, '');
-
-            console.log('Determining type for variable:', cleanVarName);
-
-            // تحقق مما إذا كان المتغير هو نتيجة استدعاء نموذج
-            var modelPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::(all|get|find|where|first)', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::where', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->where', 'i')];
-
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = modelPatterns[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var pattern = _step.value;
-
-                    if (pattern.test(content)) {
-                        console.log('Variable is a collection (from model)');
-                        return 'collection';
-                    }
-                }
-
-                // تحقق مما إذا كان المتغير هو نتيجة استدعاء DB
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-
-            var dbPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*DB::(table|select)', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->join', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\$?\\w+->select', 'i')];
-
-            var _iteratorNormalCompletion2 = true;
-            var _didIteratorError2 = false;
-            var _iteratorError2 = undefined;
-
-            try {
-                for (var _iterator2 = dbPatterns[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                    var _pattern = _step2.value;
-
-                    if (_pattern.test(content)) {
-                        console.log('Variable is a DB query');
-                        return 'db';
-                    }
-                }
-
-                // تحقق مما إذا كان المتغير هو كائن نموذج فردي
-            } catch (err) {
-                _didIteratorError2 = true;
-                _iteratorError2 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                        _iterator2.return();
-                    }
-                } finally {
-                    if (_didIteratorError2) {
-                        throw _iteratorError2;
-                    }
-                }
-            }
-
-            var singleModelPatterns = [new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::find\\(', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::findOrFail\\(', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*\\w+::first\\(', 'i'), new RegExp('\\$?' + cleanVarName + '\\s*=\\s*new\\s+\\w+\\(', 'i')];
-
-            var _iteratorNormalCompletion3 = true;
-            var _didIteratorError3 = false;
-            var _iteratorError3 = undefined;
-
-            try {
-                for (var _iterator3 = singleModelPatterns[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                    var _pattern2 = _step3.value;
-
-                    if (_pattern2.test(content)) {
-                        console.log('Variable is a model instance');
-                        return 'model';
-                    }
-                }
-
-                // افتراضيًا، اعتبره مجموعة
-            } catch (err) {
-                _didIteratorError3 = true;
-                _iteratorError3 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                        _iterator3.return();
-                    }
-                } finally {
-                    if (_didIteratorError3) {
-                        throw _iteratorError3;
-                    }
-                }
-            }
-
-            console.log('Variable type not determined, defaulting to collection');
-            return 'collection';
-        },
-        autoShowHints: function autoShowHints(editor) {
+        autoShowHints: function autoShowHints(cm, changes) {
             var _this4 = this;
 
-            var cursor = editor.getCursor();
-            var line = editor.getLine(cursor.line);
-            var lineUntilCursor = line.substring(0, cursor.ch);
+            var cursor = cm.getCursor();
+            var token = cm.getTokenAt(cursor);
+            var line = cm.getLine(cursor.line);
 
-            // عرض الاقتراحات تلقائيًا عند كتابة "::" أو "->"
-            if (lineUntilCursor.endsWith('::') || lineUntilCursor.endsWith('->')) {
-                console.log('Auto showing hints for :: or ->');
+            // تحقق من وجود :: أو -> قبل الموضع الحالي
+            var staticMethodTrigger = line.substring(0, cursor.ch).endsWith('::');
+            var methodTrigger = line.substring(0, cursor.ch).endsWith('->');
+
+            if (staticMethodTrigger || methodTrigger) {
+                console.log('Trigger detected:', staticMethodTrigger ? '::' : '->');
                 setTimeout(function () {
-                    _this4.showHints(editor);
-                }, 10);
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4), {
+                        completeSingle: false,
+                        trigger: staticMethodTrigger ? '::' : '->'
+                    });
+                }, 100);
                 return;
+            }
+
+            // إظهار الاقتراحات عند كتابة حرف جديد إذا كان هناك على الأقل حرفين
+            if (token.type === 'variable-2' || token.string.match(/^\w{2,}$/)) {
+                setTimeout(function () {
+                    __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.showHint(cm, _this4.showHints.bind(_this4), {
+                        completeSingle: false
+                    });
+                }, 100);
             }
         },
         handleTabCompletion: function handleTabCompletion(cm) {
