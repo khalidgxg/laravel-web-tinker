@@ -143,9 +143,15 @@ export default {
         });
 
         this.codeEditor.on('keyup', (editor, event) => {
+            // تحسين استجابة الاقتراحات عند الكتابة
+            const keyCode = event.keyCode;
             if (!editor.state.completionActive &&
-                /[a-zA-Z$_:>]/.test(String.fromCharCode(event.keyCode))) {
-                this.showHints(editor);
+                (keyCode === 190 || // النقطة
+                 keyCode === 186 || // النقطتان
+                 (keyCode >= 65 && keyCode <= 90) || // الحروف
+                 (keyCode >= 97 && keyCode <= 122))) { // الحروف
+
+                CodeMirror.commands.autocomplete(editor, null, {completeSingle: false});
             }
         });
 
@@ -218,6 +224,11 @@ export default {
             }
         `;
         document.head.appendChild(style);
+
+        // تسجيل دالة الاقتراحات المخصصة
+        CodeMirror.registerHelper('hint', 'anyword', (editor, options) => {
+            return this.showHints(editor, options);
+        });
     },
 
     methods: {
@@ -293,7 +304,7 @@ export default {
         },
 
         showHints(cm, options) {
-            console.log('showHints called with options:', options);
+            console.log('showHints called');
 
             const cursor = cm.getCursor();
             const token = cm.getTokenAt(cursor);
@@ -303,37 +314,67 @@ export default {
             console.log('Current token:', token);
             console.log('Current line:', line);
 
-            // تحليل السياق لتحديد نوع الاقتراحات المناسبة
-            const context = this.analyzeContext(cm, cursor, line, token);
-            console.log('Context analysis result:', context);
-
+            // إنشاء قائمة الاقتراحات
             let list = [];
 
-            if (context.type === 'static-method' && context.class) {
-                // اقتراحات للطرق الثابتة للفئة
-                list = this.getStaticMethodSuggestions(context.class);
-            } else if (context.type === 'method' && context.variable) {
-                // اقتراحات للطرق على متغير
-                const varType = this.determineVariableType(cm, context.variable);
-                list = this.getMethodSuggestions(varType);
-            } else if (context.type === 'class') {
-                // اقتراحات للفئات
-                list = this.phpClasses.map(cls => ({
-                    text: cls,
-                    displayText: cls,
-                    className: 'CodeMirror-hint-class',
-                    type: 'class'
-                }));
-            } else if (context.type === 'variable') {
-                // اقتراحات للمتغيرات
-                list = this.getVariableSuggestions();
-            } else if (context.type === 'function') {
-                // اقتراحات للدوال
-                list = this.getFunctionSuggestions();
-            } else {
-                // اقتراحات عامة
-                list = this.getGeneralSuggestions();
-            }
+            // إضافة اقتراحات الفئات
+            this.phpClasses.forEach(cls => {
+                if (typeof cls === 'string') {
+                    list.push({
+                        text: cls,
+                        displayText: cls,
+                        className: 'hint-class',
+                        type: 'class'
+                    });
+                } else if (cls.name) {
+                    list.push({
+                        text: cls.name,
+                        displayText: cls.name,
+                        className: 'hint-class',
+                        type: 'class'
+                    });
+                }
+            });
+
+            // إضافة الكلمات المفتاحية والدوال
+            this.phpKeywords.forEach(keyword => {
+                list.push({
+                    text: keyword,
+                    displayText: keyword,
+                    className: 'hint-keyword',
+                    type: 'keyword'
+                });
+            });
+
+            // إضافة اقتراحات النماذج
+            this.contextualSuggestions.model.forEach(method => {
+                list.push({
+                    text: method,
+                    displayText: method,
+                    className: 'hint-model',
+                    type: 'model'
+                });
+            });
+
+            // إضافة اقتراحات قاعدة البيانات
+            this.contextualSuggestions.db.forEach(method => {
+                list.push({
+                    text: method,
+                    displayText: method,
+                    className: 'hint-db',
+                    type: 'db'
+                });
+            });
+
+            // إضافة اقتراحات المجموعات
+            this.contextualSuggestions.collection.forEach(method => {
+                list.push({
+                    text: method,
+                    displayText: method,
+                    className: 'hint-collection',
+                    type: 'collection'
+                });
+            });
 
             // تصفية الاقتراحات بناءً على الكلمة الحالية
             if (currentWord && currentWord !== '::' && currentWord !== '->') {
@@ -342,18 +383,7 @@ export default {
                 );
             }
 
-            console.log('Filtered suggestions list:', list);
-
-            if (list.length === 0) {
-                console.log('No suggestions available, falling back to default suggestions');
-                list = this.getGeneralSuggestions();
-
-                if (currentWord && currentWord !== '::' && currentWord !== '->') {
-                    list = list.filter(item =>
-                        item.text.toLowerCase().startsWith(currentWord.toLowerCase())
-                    );
-                }
-            }
+            console.log('Suggestions list:', list.length, 'items');
 
             return {
                 list: list,
@@ -362,59 +392,7 @@ export default {
             };
         },
 
-        analyzeContext(cm, cursor, line, token) {
-            console.log('Analyzing context at cursor:', cursor);
-            console.log('Token:', token);
-
-            // تحقق من وجود :: قبل الموضع الحالي (للطرق الثابتة)
-            const staticMethodMatch = line.substring(0, cursor.ch).match(/(\w+)::(\w*)$/);
-            if (staticMethodMatch) {
-                console.log('Static method context detected:', staticMethodMatch[1]);
-                return {
-                    type: 'static-method',
-                    class: staticMethodMatch[1],
-                    prefix: staticMethodMatch[2]
-                };
-            }
-
-            // تحقق من وجود -> قبل الموضع الحالي (للطرق)
-            const methodMatch = line.substring(0, cursor.ch).match(/(\$\w+)->(\w*)$/);
-            if (methodMatch) {
-                console.log('Method context detected for variable:', methodMatch[1]);
-                return {
-                    type: 'method',
-                    variable: methodMatch[1],
-                    prefix: methodMatch[2]
-                };
-            }
-
-            // تحقق مما إذا كان المستخدم يكتب اسم فئة
-            if (token.type === 'variable-2' || token.string.match(/^[A-Z]\w*$/)) {
-                console.log('Class name context detected');
-                return {
-                    type: 'class',
-                    prefix: token.string
-                };
-            }
-
-            // تحقق مما إذا كان المستخدم يكتب متغيرًا
-            if (token.string.startsWith('$')) {
-                console.log('Variable context detected');
-                return {
-                    type: 'variable',
-                    prefix: token.string
-                };
-            }
-
-            // السياق الافتراضي
-            console.log('Default/general context');
-            return {
-                type: 'general',
-                prefix: token.string
-            };
-        },
-
-        autoShowHints(cm, changes) {
+        autoShowHints(cm) {
             const cursor = cm.getCursor();
             const token = cm.getTokenAt(cursor);
             const line = cm.getLine(cursor.line);
@@ -426,20 +404,16 @@ export default {
             if (staticMethodTrigger || methodTrigger) {
                 console.log('Trigger detected:', staticMethodTrigger ? '::' : '->');
                 setTimeout(() => {
-                    CodeMirror.showHint(cm, this.showHints.bind(this), {
-                        completeSingle: false,
-                        trigger: staticMethodTrigger ? '::' : '->'
-                    });
+                    CodeMirror.showHint(cm, CodeMirror.hint.anyword);
+                    CodeMirror.showHint(cm, this.showHints.bind(this));
                 }, 100);
                 return;
             }
 
             // إظهار الاقتراحات عند كتابة حرف جديد إذا كان هناك على الأقل حرفين
-            if (token.type === 'variable-2' || token.string.match(/^\w{2,}$/)) {
+            if (token.string.match(/^\w{2,}$/)) {
                 setTimeout(() => {
-                    CodeMirror.showHint(cm, this.showHints.bind(this), {
-                        completeSingle: false
-                    });
+                    CodeMirror.showHint(cm, this.showHints.bind(this));
                 }, 100);
             }
         },
