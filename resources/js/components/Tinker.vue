@@ -276,6 +276,7 @@ export default {
     top: 10px;
     right: 10px;
     z-index: 1000;
+    direction: rtl;
 }
 
 .shortcuts-toggle {
@@ -289,6 +290,7 @@ export default {
     align-items: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     transition: background-color 0.2s;
+    direction: rtl;
 }
 
 .shortcuts-toggle:hover {
@@ -296,7 +298,8 @@ export default {
 }
 
 .shortcuts-icon {
-    margin-right: 5px;
+    margin-left: 5px;
+    margin-right: 0;
     font-style: normal;
 }
 
@@ -311,6 +314,8 @@ export default {
     color: white;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     overflow: hidden;
+    direction: rtl;
+    text-align: right;
 }
 
 .shortcuts-header {
@@ -345,6 +350,7 @@ export default {
     justify-content: space-between;
     margin-bottom: 10px;
     font-size: 12px;
+    flex-direction: row-reverse;
 }
 
 .shortcut-key {
@@ -352,6 +358,7 @@ export default {
     padding: 3px 6px;
     border-radius: 3px;
     font-weight: bold;
+    direction: ltr;
 }
 
 .shortcut-desc {
