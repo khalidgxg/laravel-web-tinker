@@ -7,6 +7,14 @@ import 'codemirror/mode/php/php';
 import 'codemirror/addon/hint/show-hint';
 import 'codemirror/addon/hint/anyword-hint';
 import 'codemirror/addon/hint/show-hint.css';
+import 'codemirror/addon/edit/matchbrackets';
+import 'codemirror/addon/edit/closebrackets';
+import 'codemirror/addon/selection/active-line';
+import 'codemirror/theme/dracula.css';
+import 'codemirror/theme/monokai.css';
+import 'codemirror/theme/material.css';
+import 'codemirror/theme/nord.css';
+import 'codemirror/theme/solarized.css';
 
 import CodeMirror from 'codemirror';
 import axios from 'axios';
@@ -60,9 +68,17 @@ export default {
             indentWithTabs: true,
             lineNumbers: true,
             lineWrapping: true,
-            mode: 'text/x-php',
+            mode: {
+                name: 'php',
+                startOpen: true,
+                htmlMode: false
+            },
             tabSize: 4,
-            theme: 'tinker'
+            theme: 'dracula',
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            indentUnit: 4
         };
 
         this.codeEditor = CodeMirror.fromTextArea(this.$refs.codeEditor, config);

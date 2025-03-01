@@ -1943,16 +1943,40 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_codemirror_addon_hint_anyword_hint___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_codemirror_addon_hint_anyword_hint__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_codemirror_addon_hint_show_hint_css__ = __webpack_require__("./node_modules/codemirror/addon/hint/show-hint.css");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_codemirror_addon_hint_show_hint_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_codemirror_addon_hint_show_hint_css__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_codemirror__ = __webpack_require__("./node_modules/codemirror/lib/codemirror.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_codemirror___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_codemirror__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_axios__ = __webpack_require__("./node_modules/axios/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_axios__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_codemirror_addon_edit_matchbrackets__ = __webpack_require__("./node_modules/codemirror/addon/edit/matchbrackets.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_codemirror_addon_edit_matchbrackets___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_codemirror_addon_edit_matchbrackets__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_codemirror_addon_edit_closebrackets__ = __webpack_require__("./node_modules/codemirror/addon/edit/closebrackets.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_codemirror_addon_edit_closebrackets___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_codemirror_addon_edit_closebrackets__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_codemirror_addon_selection_active_line__ = __webpack_require__("./node_modules/codemirror/addon/selection/active-line.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_codemirror_addon_selection_active_line___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_codemirror_addon_selection_active_line__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_codemirror_theme_dracula_css__ = __webpack_require__("./node_modules/codemirror/theme/dracula.css");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_codemirror_theme_dracula_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_codemirror_theme_dracula_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_codemirror_theme_monokai_css__ = __webpack_require__("./node_modules/codemirror/theme/monokai.css");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_codemirror_theme_monokai_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_codemirror_theme_monokai_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_codemirror_theme_material_css__ = __webpack_require__("./node_modules/codemirror/theme/material.css");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_codemirror_theme_material_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_9_codemirror_theme_material_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_codemirror_theme_nord_css__ = __webpack_require__("./node_modules/codemirror/theme/nord.css");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_codemirror_theme_nord_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_10_codemirror_theme_nord_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_codemirror_theme_solarized_css__ = __webpack_require__("./node_modules/codemirror/theme/solarized.css");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_codemirror_theme_solarized_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_11_codemirror_theme_solarized_css__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_codemirror__ = __webpack_require__("./node_modules/codemirror/lib/codemirror.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12_codemirror___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_12_codemirror__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_axios__ = __webpack_require__("./node_modules/axios/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13_axios___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_13_axios__);
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 //
 //
 //
 //
+
+
+
+
+
+
+
+
 
 
 
@@ -2008,12 +2032,20 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             indentWithTabs: true,
             lineNumbers: true,
             lineWrapping: true,
-            mode: 'text/x-php',
+            mode: {
+                name: 'php',
+                startOpen: true,
+                htmlMode: false
+            },
             tabSize: 4,
-            theme: 'tinker'
+            theme: 'dracula',
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            styleActiveLine: true,
+            indentUnit: 4
         };
 
-        this.codeEditor = __WEBPACK_IMPORTED_MODULE_4_codemirror___default.a.fromTextArea(this.$refs.codeEditor, config);
+        this.codeEditor = __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.fromTextArea(this.$refs.codeEditor, config);
 
         this.codeEditor.on('change', function (editor) {
             localStorage.setItem('tinker-tool', editor.getValue());
@@ -2054,7 +2086,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             console.log('Base URL:', baseUrl);
             console.log('Loading classes from:', classesUrl);
 
-            __WEBPACK_IMPORTED_MODULE_5_axios___default.a.get(classesUrl).then(function (response) {
+            __WEBPACK_IMPORTED_MODULE_13_axios___default.a.get(classesUrl).then(function (response) {
                 if (response.data && response.data.classes) {
                     _this2.phpClasses = response.data.classes;
                     console.log('Loaded classes:', _this2.phpClasses.length);
@@ -2092,7 +2124,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 return;
             }
 
-            __WEBPACK_IMPORTED_MODULE_5_axios___default.a.post(this.path, { code: code }).then(function (_ref) {
+            __WEBPACK_IMPORTED_MODULE_13_axios___default.a.post(this.path, { code: code }).then(function (_ref) {
                 var data = _ref.data;
 
                 _this3.$emit('execute', data);
@@ -2121,8 +2153,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 hint: function hint() {
                     return {
                         list: list,
-                        from: __WEBPACK_IMPORTED_MODULE_4_codemirror___default.a.Pos(cursor.line, start),
-                        to: __WEBPACK_IMPORTED_MODULE_4_codemirror___default.a.Pos(cursor.line, end)
+                        from: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, start),
+                        to: __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pos(cursor.line, end)
                     };
                 }
             });
@@ -2137,7 +2169,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         },
         handleTabCompletion: function handleTabCompletion(cm) {
             if (cm.state.completionActive) {
-                return __WEBPACK_IMPORTED_MODULE_4_codemirror___default.a.Pass;
+                return __WEBPACK_IMPORTED_MODULE_12_codemirror___default.a.Pass;
             }
             var cursor = cm.getCursor();
             var token = cm.getTokenAt(cursor);
@@ -2290,6 +2322,361 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: ['value']
 });
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/addon/edit/closebrackets.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: https://codemirror.net/LICENSE
+
+(function(mod) {
+  if (true) // CommonJS
+    mod(__webpack_require__("./node_modules/codemirror/lib/codemirror.js"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  var defaults = {
+    pairs: "()[]{}''\"\"",
+    closeBefore: ")]}'\":;>",
+    triples: "",
+    explode: "[]{}"
+  };
+
+  var Pos = CodeMirror.Pos;
+
+  CodeMirror.defineOption("autoCloseBrackets", false, function(cm, val, old) {
+    if (old && old != CodeMirror.Init) {
+      cm.removeKeyMap(keyMap);
+      cm.state.closeBrackets = null;
+    }
+    if (val) {
+      ensureBound(getOption(val, "pairs"))
+      cm.state.closeBrackets = val;
+      cm.addKeyMap(keyMap);
+    }
+  });
+
+  function getOption(conf, name) {
+    if (name == "pairs" && typeof conf == "string") return conf;
+    if (typeof conf == "object" && conf[name] != null) return conf[name];
+    return defaults[name];
+  }
+
+  var keyMap = {Backspace: handleBackspace, Enter: handleEnter};
+  function ensureBound(chars) {
+    for (var i = 0; i < chars.length; i++) {
+      var ch = chars.charAt(i), key = "'" + ch + "'"
+      if (!keyMap[key]) keyMap[key] = handler(ch)
+    }
+  }
+  ensureBound(defaults.pairs + "`")
+
+  function handler(ch) {
+    return function(cm) { return handleChar(cm, ch); };
+  }
+
+  function getConfig(cm) {
+    var deflt = cm.state.closeBrackets;
+    if (!deflt || deflt.override) return deflt;
+    var mode = cm.getModeAt(cm.getCursor());
+    return mode.closeBrackets || deflt;
+  }
+
+  function handleBackspace(cm) {
+    var conf = getConfig(cm);
+    if (!conf || cm.getOption("disableInput")) return CodeMirror.Pass;
+
+    var pairs = getOption(conf, "pairs");
+    var ranges = cm.listSelections();
+    for (var i = 0; i < ranges.length; i++) {
+      if (!ranges[i].empty()) return CodeMirror.Pass;
+      var around = charsAround(cm, ranges[i].head);
+      if (!around || pairs.indexOf(around) % 2 != 0) return CodeMirror.Pass;
+    }
+    for (var i = ranges.length - 1; i >= 0; i--) {
+      var cur = ranges[i].head;
+      cm.replaceRange("", Pos(cur.line, cur.ch - 1), Pos(cur.line, cur.ch + 1), "+delete");
+    }
+  }
+
+  function handleEnter(cm) {
+    var conf = getConfig(cm);
+    var explode = conf && getOption(conf, "explode");
+    if (!explode || cm.getOption("disableInput")) return CodeMirror.Pass;
+
+    var ranges = cm.listSelections();
+    for (var i = 0; i < ranges.length; i++) {
+      if (!ranges[i].empty()) return CodeMirror.Pass;
+      var around = charsAround(cm, ranges[i].head);
+      if (!around || explode.indexOf(around) % 2 != 0) return CodeMirror.Pass;
+    }
+    cm.operation(function() {
+      var linesep = cm.lineSeparator() || "\n";
+      cm.replaceSelection(linesep + linesep, null);
+      cm.execCommand("goCharLeft");
+      ranges = cm.listSelections();
+      for (var i = 0; i < ranges.length; i++) {
+        var line = ranges[i].head.line;
+        cm.indentLine(line, null, true);
+        cm.indentLine(line + 1, null, true);
+      }
+    });
+  }
+
+  function contractSelection(sel) {
+    var inverted = CodeMirror.cmpPos(sel.anchor, sel.head) > 0;
+    return {anchor: new Pos(sel.anchor.line, sel.anchor.ch + (inverted ? -1 : 1)),
+            head: new Pos(sel.head.line, sel.head.ch + (inverted ? 1 : -1))};
+  }
+
+  function handleChar(cm, ch) {
+    var conf = getConfig(cm);
+    if (!conf || cm.getOption("disableInput")) return CodeMirror.Pass;
+
+    var pairs = getOption(conf, "pairs");
+    var pos = pairs.indexOf(ch);
+    if (pos == -1) return CodeMirror.Pass;
+
+    var closeBefore = getOption(conf,"closeBefore");
+
+    var triples = getOption(conf, "triples");
+
+    var identical = pairs.charAt(pos + 1) == ch;
+    var ranges = cm.listSelections();
+    var opening = pos % 2 == 0;
+
+    var type;
+    for (var i = 0; i < ranges.length; i++) {
+      var range = ranges[i], cur = range.head, curType;
+      var next = cm.getRange(cur, Pos(cur.line, cur.ch + 1));
+      if (opening && !range.empty()) {
+        curType = "surround";
+      } else if ((identical || !opening) && next == ch) {
+        if (identical && stringStartsAfter(cm, cur))
+          curType = "both";
+        else if (triples.indexOf(ch) >= 0 && cm.getRange(cur, Pos(cur.line, cur.ch + 3)) == ch + ch + ch)
+          curType = "skipThree";
+        else
+          curType = "skip";
+      } else if (identical && cur.ch > 1 && triples.indexOf(ch) >= 0 &&
+                 cm.getRange(Pos(cur.line, cur.ch - 2), cur) == ch + ch) {
+        if (cur.ch > 2 && /\bstring/.test(cm.getTokenTypeAt(Pos(cur.line, cur.ch - 2)))) return CodeMirror.Pass;
+        curType = "addFour";
+      } else if (identical) {
+        var prev = cur.ch == 0 ? " " : cm.getRange(Pos(cur.line, cur.ch - 1), cur)
+        if (!CodeMirror.isWordChar(next) && prev != ch && !CodeMirror.isWordChar(prev)) curType = "both";
+        else return CodeMirror.Pass;
+      } else if (opening && (next.length === 0 || /\s/.test(next) || closeBefore.indexOf(next) > -1)) {
+        curType = "both";
+      } else {
+        return CodeMirror.Pass;
+      }
+      if (!type) type = curType;
+      else if (type != curType) return CodeMirror.Pass;
+    }
+
+    var left = pos % 2 ? pairs.charAt(pos - 1) : ch;
+    var right = pos % 2 ? ch : pairs.charAt(pos + 1);
+    cm.operation(function() {
+      if (type == "skip") {
+        cm.execCommand("goCharRight");
+      } else if (type == "skipThree") {
+        for (var i = 0; i < 3; i++)
+          cm.execCommand("goCharRight");
+      } else if (type == "surround") {
+        var sels = cm.getSelections();
+        for (var i = 0; i < sels.length; i++)
+          sels[i] = left + sels[i] + right;
+        cm.replaceSelections(sels, "around");
+        sels = cm.listSelections().slice();
+        for (var i = 0; i < sels.length; i++)
+          sels[i] = contractSelection(sels[i]);
+        cm.setSelections(sels);
+      } else if (type == "both") {
+        cm.replaceSelection(left + right, null);
+        cm.triggerElectric(left + right);
+        cm.execCommand("goCharLeft");
+      } else if (type == "addFour") {
+        cm.replaceSelection(left + left + left + left, "before");
+        cm.execCommand("goCharRight");
+      }
+    });
+  }
+
+  function charsAround(cm, pos) {
+    var str = cm.getRange(Pos(pos.line, pos.ch - 1),
+                          Pos(pos.line, pos.ch + 1));
+    return str.length == 2 ? str : null;
+  }
+
+  function stringStartsAfter(cm, pos) {
+    var token = cm.getTokenAt(Pos(pos.line, pos.ch + 1))
+    return /\bstring/.test(token.type) && token.start == pos.ch &&
+      (pos.ch == 0 || !/\bstring/.test(cm.getTokenTypeAt(pos)))
+  }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/addon/edit/matchbrackets.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: https://codemirror.net/LICENSE
+
+(function(mod) {
+  if (true) // CommonJS
+    mod(__webpack_require__("./node_modules/codemirror/lib/codemirror.js"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  var ie_lt8 = /MSIE \d/.test(navigator.userAgent) &&
+    (document.documentMode == null || document.documentMode < 8);
+
+  var Pos = CodeMirror.Pos;
+
+  var matching = {"(": ")>", ")": "(<", "[": "]>", "]": "[<", "{": "}>", "}": "{<", "<": ">>", ">": "<<"};
+
+  function bracketRegex(config) {
+    return config && config.bracketRegex || /[(){}[\]]/
+  }
+
+  function findMatchingBracket(cm, where, config) {
+    var line = cm.getLineHandle(where.line), pos = where.ch - 1;
+    var afterCursor = config && config.afterCursor
+    if (afterCursor == null)
+      afterCursor = /(^| )cm-fat-cursor($| )/.test(cm.getWrapperElement().className)
+    var re = bracketRegex(config)
+
+    // A cursor is defined as between two characters, but in in vim command mode
+    // (i.e. not insert mode), the cursor is visually represented as a
+    // highlighted box on top of the 2nd character. Otherwise, we allow matches
+    // from before or after the cursor.
+    var match = (!afterCursor && pos >= 0 && re.test(line.text.charAt(pos)) && matching[line.text.charAt(pos)]) ||
+        re.test(line.text.charAt(pos + 1)) && matching[line.text.charAt(++pos)];
+    if (!match) return null;
+    var dir = match.charAt(1) == ">" ? 1 : -1;
+    if (config && config.strict && (dir > 0) != (pos == where.ch)) return null;
+    var style = cm.getTokenTypeAt(Pos(where.line, pos + 1));
+
+    var found = scanForBracket(cm, Pos(where.line, pos + (dir > 0 ? 1 : 0)), dir, style || null, config);
+    if (found == null) return null;
+    return {from: Pos(where.line, pos), to: found && found.pos,
+            match: found && found.ch == match.charAt(0), forward: dir > 0};
+  }
+
+  // bracketRegex is used to specify which type of bracket to scan
+  // should be a regexp, e.g. /[[\]]/
+  //
+  // Note: If "where" is on an open bracket, then this bracket is ignored.
+  //
+  // Returns false when no bracket was found, null when it reached
+  // maxScanLines and gave up
+  function scanForBracket(cm, where, dir, style, config) {
+    var maxScanLen = (config && config.maxScanLineLength) || 10000;
+    var maxScanLines = (config && config.maxScanLines) || 1000;
+
+    var stack = [];
+    var re = bracketRegex(config)
+    var lineEnd = dir > 0 ? Math.min(where.line + maxScanLines, cm.lastLine() + 1)
+                          : Math.max(cm.firstLine() - 1, where.line - maxScanLines);
+    for (var lineNo = where.line; lineNo != lineEnd; lineNo += dir) {
+      var line = cm.getLine(lineNo);
+      if (!line) continue;
+      var pos = dir > 0 ? 0 : line.length - 1, end = dir > 0 ? line.length : -1;
+      if (line.length > maxScanLen) continue;
+      if (lineNo == where.line) pos = where.ch - (dir < 0 ? 1 : 0);
+      for (; pos != end; pos += dir) {
+        var ch = line.charAt(pos);
+        if (re.test(ch) && (style === undefined || cm.getTokenTypeAt(Pos(lineNo, pos + 1)) == style)) {
+          var match = matching[ch];
+          if (match && (match.charAt(1) == ">") == (dir > 0)) stack.push(ch);
+          else if (!stack.length) return {pos: Pos(lineNo, pos), ch: ch};
+          else stack.pop();
+        }
+      }
+    }
+    return lineNo - dir == (dir > 0 ? cm.lastLine() : cm.firstLine()) ? false : null;
+  }
+
+  function matchBrackets(cm, autoclear, config) {
+    // Disable brace matching in long lines, since it'll cause hugely slow updates
+    var maxHighlightLen = cm.state.matchBrackets.maxHighlightLineLength || 1000;
+    var marks = [], ranges = cm.listSelections();
+    for (var i = 0; i < ranges.length; i++) {
+      var match = ranges[i].empty() && findMatchingBracket(cm, ranges[i].head, config);
+      if (match && cm.getLine(match.from.line).length <= maxHighlightLen) {
+        var style = match.match ? "CodeMirror-matchingbracket" : "CodeMirror-nonmatchingbracket";
+        marks.push(cm.markText(match.from, Pos(match.from.line, match.from.ch + 1), {className: style}));
+        if (match.to && cm.getLine(match.to.line).length <= maxHighlightLen)
+          marks.push(cm.markText(match.to, Pos(match.to.line, match.to.ch + 1), {className: style}));
+      }
+    }
+
+    if (marks.length) {
+      // Kludge to work around the IE bug from issue #1193, where text
+      // input stops going to the textare whever this fires.
+      if (ie_lt8 && cm.state.focused) cm.focus();
+
+      var clear = function() {
+        cm.operation(function() {
+          for (var i = 0; i < marks.length; i++) marks[i].clear();
+        });
+      };
+      if (autoclear) setTimeout(clear, 800);
+      else return clear;
+    }
+  }
+
+  function doMatchBrackets(cm) {
+    cm.operation(function() {
+      if (cm.state.matchBrackets.currentlyHighlighted) {
+        cm.state.matchBrackets.currentlyHighlighted();
+        cm.state.matchBrackets.currentlyHighlighted = null;
+      }
+      cm.state.matchBrackets.currentlyHighlighted = matchBrackets(cm, false, cm.state.matchBrackets);
+    });
+  }
+
+  CodeMirror.defineOption("matchBrackets", false, function(cm, val, old) {
+    if (old && old != CodeMirror.Init) {
+      cm.off("cursorActivity", doMatchBrackets);
+      if (cm.state.matchBrackets && cm.state.matchBrackets.currentlyHighlighted) {
+        cm.state.matchBrackets.currentlyHighlighted();
+        cm.state.matchBrackets.currentlyHighlighted = null;
+      }
+    }
+    if (val) {
+      cm.state.matchBrackets = typeof val == "object" ? val : {};
+      cm.on("cursorActivity", doMatchBrackets);
+    }
+  });
+
+  CodeMirror.defineExtension("matchBrackets", function() {matchBrackets(this, true);});
+  CodeMirror.defineExtension("findMatchingBracket", function(pos, config, oldConfig){
+    // Backwards-compatibility kludge
+    if (oldConfig || typeof config == "boolean") {
+      if (!oldConfig) {
+        config = config ? {strict: true} : null
+      } else {
+        oldConfig.strict = config
+        config = oldConfig
+      }
+    }
+    return findMatchingBracket(this, pos, config)
+  });
+  CodeMirror.defineExtension("scanForBracket", function(pos, dir, style, config){
+    return scanForBracket(this, pos, dir, style, config);
+  });
+});
+
 
 /***/ }),
 
@@ -2835,6 +3222,85 @@ if(false) {
   };
 
   CodeMirror.defineOption("hintOptions", null);
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/addon/selection/active-line.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: https://codemirror.net/LICENSE
+
+(function(mod) {
+  if (true) // CommonJS
+    mod(__webpack_require__("./node_modules/codemirror/lib/codemirror.js"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["../../lib/codemirror"], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  "use strict";
+  var WRAP_CLASS = "CodeMirror-activeline";
+  var BACK_CLASS = "CodeMirror-activeline-background";
+  var GUTT_CLASS = "CodeMirror-activeline-gutter";
+
+  CodeMirror.defineOption("styleActiveLine", false, function(cm, val, old) {
+    var prev = old == CodeMirror.Init ? false : old;
+    if (val == prev) return
+    if (prev) {
+      cm.off("beforeSelectionChange", selectionChange);
+      clearActiveLines(cm);
+      delete cm.state.activeLines;
+    }
+    if (val) {
+      cm.state.activeLines = [];
+      updateActiveLines(cm, cm.listSelections());
+      cm.on("beforeSelectionChange", selectionChange);
+    }
+  });
+
+  function clearActiveLines(cm) {
+    for (var i = 0; i < cm.state.activeLines.length; i++) {
+      cm.removeLineClass(cm.state.activeLines[i], "wrap", WRAP_CLASS);
+      cm.removeLineClass(cm.state.activeLines[i], "background", BACK_CLASS);
+      cm.removeLineClass(cm.state.activeLines[i], "gutter", GUTT_CLASS);
+    }
+  }
+
+  function sameArray(a, b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++)
+      if (a[i] != b[i]) return false;
+    return true;
+  }
+
+  function updateActiveLines(cm, ranges) {
+    var active = [];
+    for (var i = 0; i < ranges.length; i++) {
+      var range = ranges[i];
+      var option = cm.getOption("styleActiveLine");
+      if (typeof option == "object" && option.nonEmpty ? range.anchor.line != range.head.line : !range.empty())
+        continue
+      var line = cm.getLineHandleVisualStart(range.head.line);
+      if (active[active.length - 1] != line) active.push(line);
+    }
+    if (sameArray(cm.state.activeLines, active)) return;
+    cm.operation(function() {
+      clearActiveLines(cm);
+      for (var i = 0; i < active.length; i++) {
+        cm.addLineClass(active[i], "wrap", WRAP_CLASS);
+        cm.addLineClass(active[i], "background", BACK_CLASS);
+        cm.addLineClass(active[i], "gutter", GUTT_CLASS);
+      }
+      cm.state.activeLines = active;
+    });
+  }
+
+  function selectionChange(cm, sel) {
+    updateActiveLines(cm, sel.ranges);
+  }
 });
 
 
@@ -16081,6 +16547,166 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 
 /***/ }),
 
+/***/ "./node_modules/codemirror/theme/dracula.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__("./node_modules/css-loader/index.js!./node_modules/codemirror/theme/dracula.css");
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__("./node_modules/style-loader/lib/addStyles.js")(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../css-loader/index.js!./dracula.css", function() {
+			var newContent = require("!!../../css-loader/index.js!./dracula.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/theme/material.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__("./node_modules/css-loader/index.js!./node_modules/codemirror/theme/material.css");
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__("./node_modules/style-loader/lib/addStyles.js")(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../css-loader/index.js!./material.css", function() {
+			var newContent = require("!!../../css-loader/index.js!./material.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/theme/monokai.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__("./node_modules/css-loader/index.js!./node_modules/codemirror/theme/monokai.css");
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__("./node_modules/style-loader/lib/addStyles.js")(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../css-loader/index.js!./monokai.css", function() {
+			var newContent = require("!!../../css-loader/index.js!./monokai.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/theme/nord.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__("./node_modules/css-loader/index.js!./node_modules/codemirror/theme/nord.css");
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__("./node_modules/style-loader/lib/addStyles.js")(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../css-loader/index.js!./nord.css", function() {
+			var newContent = require("!!../../css-loader/index.js!./nord.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+
+/***/ "./node_modules/codemirror/theme/solarized.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__("./node_modules/css-loader/index.js!./node_modules/codemirror/theme/solarized.css");
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__("./node_modules/style-loader/lib/addStyles.js")(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../css-loader/index.js!./solarized.css", function() {
+			var newContent = require("!!../../css-loader/index.js!./solarized.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+
 /***/ "./node_modules/css-loader/index.js!./node_modules/codemirror/addon/hint/show-hint.css":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -16090,6 +16716,81 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 // module
 exports.push([module.i, ".CodeMirror-hints {\n  position: absolute;\n  z-index: 10;\n  overflow: hidden;\n  list-style: none;\n\n  margin: 0;\n  padding: 2px;\n\n  -webkit-box-shadow: 2px 3px 5px rgba(0,0,0,.2);\n  -moz-box-shadow: 2px 3px 5px rgba(0,0,0,.2);\n  box-shadow: 2px 3px 5px rgba(0,0,0,.2);\n  border-radius: 3px;\n  border: 1px solid silver;\n\n  background: white;\n  font-size: 90%;\n  font-family: monospace;\n\n  max-height: 20em;\n  overflow-y: auto;\n}\n\n.CodeMirror-hint {\n  margin: 0;\n  padding: 0 4px;\n  border-radius: 2px;\n  white-space: pre;\n  color: black;\n  cursor: pointer;\n}\n\nli.CodeMirror-hint-active {\n  background: #08f;\n  color: white;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js!./node_modules/codemirror/theme/dracula.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "/*\n\n    Name:       dracula\n    Author:     Michael Kaminsky (http://github.com/mkaminsky11)\n\n    Original dracula color scheme by Zeno Rocha (https://github.com/zenorocha/dracula-theme)\n\n*/\n\n\n.cm-s-dracula.CodeMirror, .cm-s-dracula .CodeMirror-gutters {\n  background-color: #282a36 !important;\n  color: #f8f8f2 !important;\n  border: none;\n}\n.cm-s-dracula .CodeMirror-gutters { color: #282a36; }\n.cm-s-dracula .CodeMirror-cursor { border-left: solid thin #f8f8f0; }\n.cm-s-dracula .CodeMirror-linenumber { color: #6D8A88; }\n.cm-s-dracula .CodeMirror-selected { background: rgba(255, 255, 255, 0.10); }\n.cm-s-dracula .CodeMirror-line::selection, .cm-s-dracula .CodeMirror-line > span::selection, .cm-s-dracula .CodeMirror-line > span > span::selection { background: rgba(255, 255, 255, 0.10); }\n.cm-s-dracula .CodeMirror-line::-moz-selection, .cm-s-dracula .CodeMirror-line > span::-moz-selection, .cm-s-dracula .CodeMirror-line > span > span::-moz-selection { background: rgba(255, 255, 255, 0.10); }\n.cm-s-dracula span.cm-comment { color: #6272a4; }\n.cm-s-dracula span.cm-string, .cm-s-dracula span.cm-string-2 { color: #f1fa8c; }\n.cm-s-dracula span.cm-number { color: #bd93f9; }\n.cm-s-dracula span.cm-variable { color: #50fa7b; }\n.cm-s-dracula span.cm-variable-2 { color: white; }\n.cm-s-dracula span.cm-def { color: #50fa7b; }\n.cm-s-dracula span.cm-operator { color: #ff79c6; }\n.cm-s-dracula span.cm-keyword { color: #ff79c6; }\n.cm-s-dracula span.cm-atom { color: #bd93f9; }\n.cm-s-dracula span.cm-meta { color: #f8f8f2; }\n.cm-s-dracula span.cm-tag { color: #ff79c6; }\n.cm-s-dracula span.cm-attribute { color: #50fa7b; }\n.cm-s-dracula span.cm-qualifier { color: #50fa7b; }\n.cm-s-dracula span.cm-property { color: #66d9ef; }\n.cm-s-dracula span.cm-builtin { color: #50fa7b; }\n.cm-s-dracula span.cm-variable-3, .cm-s-dracula span.cm-type { color: #ffb86c; }\n\n.cm-s-dracula .CodeMirror-activeline-background { background: rgba(255,255,255,0.1); }\n.cm-s-dracula .CodeMirror-matchingbracket { text-decoration: underline; color: white !important; }\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js!./node_modules/codemirror/theme/material.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "/*\n\n    Name:       material\n    Author:     Michael Kaminsky (http://github.com/mkaminsky11)\n\n    Original material color scheme by Mattia Astorino (https://github.com/equinusocio/material-theme)\n\n*/\n\n.cm-s-material.CodeMirror {\n  background-color: #263238;\n  color: rgba(233, 237, 237, 1);\n}\n.cm-s-material .CodeMirror-gutters {\n  background: #263238;\n  color: rgb(83,127,126);\n  border: none;\n}\n.cm-s-material .CodeMirror-guttermarker, .cm-s-material .CodeMirror-guttermarker-subtle, .cm-s-material .CodeMirror-linenumber { color: rgb(83,127,126); }\n.cm-s-material .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }\n.cm-s-material div.CodeMirror-selected { background: rgba(255, 255, 255, 0.15); }\n.cm-s-material.CodeMirror-focused div.CodeMirror-selected { background: rgba(255, 255, 255, 0.10); }\n.cm-s-material .CodeMirror-line::selection, .cm-s-material .CodeMirror-line > span::selection, .cm-s-material .CodeMirror-line > span > span::selection { background: rgba(255, 255, 255, 0.10); }\n.cm-s-material .CodeMirror-line::-moz-selection, .cm-s-material .CodeMirror-line > span::-moz-selection, .cm-s-material .CodeMirror-line > span > span::-moz-selection { background: rgba(255, 255, 255, 0.10); }\n\n.cm-s-material .CodeMirror-activeline-background { background: rgba(0, 0, 0, 0); }\n.cm-s-material .cm-keyword { color: rgba(199, 146, 234, 1); }\n.cm-s-material .cm-operator { color: rgba(233, 237, 237, 1); }\n.cm-s-material .cm-variable-2 { color: #80CBC4; }\n.cm-s-material .cm-variable-3, .cm-s-material .cm-type { color: #82B1FF; }\n.cm-s-material .cm-builtin { color: #DECB6B; }\n.cm-s-material .cm-atom { color: #F77669; }\n.cm-s-material .cm-number { color: #F77669; }\n.cm-s-material .cm-def { color: rgba(233, 237, 237, 1); }\n.cm-s-material .cm-string { color: #C3E88D; }\n.cm-s-material .cm-string-2 { color: #80CBC4; }\n.cm-s-material .cm-comment { color: #546E7A; }\n.cm-s-material .cm-variable { color: #82B1FF; }\n.cm-s-material .cm-tag { color: #80CBC4; }\n.cm-s-material .cm-meta { color: #80CBC4; }\n.cm-s-material .cm-attribute { color: #FFCB6B; }\n.cm-s-material .cm-property { color: #80CBAE; }\n.cm-s-material .cm-qualifier { color: #DECB6B; }\n.cm-s-material .cm-variable-3, .cm-s-material .cm-type { color: #DECB6B; }\n.cm-s-material .cm-tag { color: rgba(255, 83, 112, 1); }\n.cm-s-material .cm-error {\n  color: rgba(255, 255, 255, 1.0);\n  background-color: #EC5F67;\n}\n.cm-s-material .CodeMirror-matchingbracket {\n  text-decoration: underline;\n  color: white !important;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js!./node_modules/codemirror/theme/monokai.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "/* Based on Sublime Text's Monokai theme */\n\n.cm-s-monokai.CodeMirror { background: #272822; color: #f8f8f2; }\n.cm-s-monokai div.CodeMirror-selected { background: #49483E; }\n.cm-s-monokai .CodeMirror-line::selection, .cm-s-monokai .CodeMirror-line > span::selection, .cm-s-monokai .CodeMirror-line > span > span::selection { background: rgba(73, 72, 62, .99); }\n.cm-s-monokai .CodeMirror-line::-moz-selection, .cm-s-monokai .CodeMirror-line > span::-moz-selection, .cm-s-monokai .CodeMirror-line > span > span::-moz-selection { background: rgba(73, 72, 62, .99); }\n.cm-s-monokai .CodeMirror-gutters { background: #272822; border-right: 0px; }\n.cm-s-monokai .CodeMirror-guttermarker { color: white; }\n.cm-s-monokai .CodeMirror-guttermarker-subtle { color: #d0d0d0; }\n.cm-s-monokai .CodeMirror-linenumber { color: #d0d0d0; }\n.cm-s-monokai .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }\n\n.cm-s-monokai span.cm-comment { color: #75715e; }\n.cm-s-monokai span.cm-atom { color: #ae81ff; }\n.cm-s-monokai span.cm-number { color: #ae81ff; }\n\n.cm-s-monokai span.cm-comment.cm-attribute { color: #97b757; }\n.cm-s-monokai span.cm-comment.cm-def { color: #bc9262; }\n.cm-s-monokai span.cm-comment.cm-tag { color: #bc6283; }\n.cm-s-monokai span.cm-comment.cm-type { color: #5998a6; }\n\n.cm-s-monokai span.cm-property, .cm-s-monokai span.cm-attribute { color: #a6e22e; }\n.cm-s-monokai span.cm-keyword { color: #f92672; }\n.cm-s-monokai span.cm-builtin { color: #66d9ef; }\n.cm-s-monokai span.cm-string { color: #e6db74; }\n\n.cm-s-monokai span.cm-variable { color: #f8f8f2; }\n.cm-s-monokai span.cm-variable-2 { color: #9effff; }\n.cm-s-monokai span.cm-variable-3, .cm-s-monokai span.cm-type { color: #66d9ef; }\n.cm-s-monokai span.cm-def { color: #fd971f; }\n.cm-s-monokai span.cm-bracket { color: #f8f8f2; }\n.cm-s-monokai span.cm-tag { color: #f92672; }\n.cm-s-monokai span.cm-header { color: #ae81ff; }\n.cm-s-monokai span.cm-link { color: #ae81ff; }\n.cm-s-monokai span.cm-error { background: #f92672; color: #f8f8f0; }\n\n.cm-s-monokai .CodeMirror-activeline-background { background: #373831; }\n.cm-s-monokai .CodeMirror-matchingbracket {\n  text-decoration: underline;\n  color: white !important;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js!./node_modules/codemirror/theme/nord.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "/* Based on arcticicestudio's Nord theme */\n/* https://github.com/arcticicestudio/nord */\n\n.cm-s-nord.CodeMirror { background: #2e3440; color: #d8dee9; }\n.cm-s-nord div.CodeMirror-selected { background: #434c5e; }\n.cm-s-nord .CodeMirror-line::selection, .cm-s-nord .CodeMirror-line > span::selection, .cm-s-nord .CodeMirror-line > span > span::selection { background: #3b4252; }\n.cm-s-nord .CodeMirror-line::-moz-selection, .cm-s-nord .CodeMirror-line > span::-moz-selection, .cm-s-nord .CodeMirror-line > span > span::-moz-selection { background: #3b4252; }\n.cm-s-nord .CodeMirror-gutters { background: #2e3440; border-right: 0px; }\n.cm-s-nord .CodeMirror-guttermarker { color: #4c566a; }\n.cm-s-nord .CodeMirror-guttermarker-subtle { color: #4c566a; }\n.cm-s-nord .CodeMirror-linenumber { color: #4c566a; }\n.cm-s-nord .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }\n\n.cm-s-nord span.cm-comment { color: #4c566a; }\n.cm-s-nord span.cm-atom { color: #b48ead; }\n.cm-s-nord span.cm-number { color: #b48ead; }\n\n.cm-s-nord span.cm-comment.cm-attribute { color: #97b757; }\n.cm-s-nord span.cm-comment.cm-def { color: #bc9262; }\n.cm-s-nord span.cm-comment.cm-tag { color: #bc6283; }\n.cm-s-nord span.cm-comment.cm-type { color: #5998a6; }\n\n.cm-s-nord span.cm-property, .cm-s-nord span.cm-attribute { color: #8FBCBB; }\n.cm-s-nord span.cm-keyword { color: #81A1C1; }\n.cm-s-nord span.cm-builtin { color: #81A1C1; }\n.cm-s-nord span.cm-string { color: #A3BE8C; }\n\n.cm-s-nord span.cm-variable { color: #d8dee9; }\n.cm-s-nord span.cm-variable-2 { color: #d8dee9; }\n.cm-s-nord span.cm-variable-3, .cm-s-nord span.cm-type { color: #d8dee9; }\n.cm-s-nord span.cm-def { color: #8FBCBB; }\n.cm-s-nord span.cm-bracket { color: #81A1C1; }\n.cm-s-nord span.cm-tag { color: #bf616a; }\n.cm-s-nord span.cm-header { color: #b48ead; }\n.cm-s-nord span.cm-link { color: #b48ead; }\n.cm-s-nord span.cm-error { background: #bf616a; color: #f8f8f0; }\n\n.cm-s-nord .CodeMirror-activeline-background { background: #3b4252; }\n.cm-s-nord .CodeMirror-matchingbracket {\n  text-decoration: underline;\n  color: white !important;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js!./node_modules/codemirror/theme/solarized.css":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "/*\nSolarized theme for code-mirror\nhttp://ethanschoonover.com/solarized\n*/\n\n/*\nSolarized color palette\nhttp://ethanschoonover.com/solarized/img/solarized-palette.png\n*/\n\n.solarized.base03 { color: #002b36; }\n.solarized.base02 { color: #073642; }\n.solarized.base01 { color: #586e75; }\n.solarized.base00 { color: #657b83; }\n.solarized.base0 { color: #839496; }\n.solarized.base1 { color: #93a1a1; }\n.solarized.base2 { color: #eee8d5; }\n.solarized.base3  { color: #fdf6e3; }\n.solarized.solar-yellow  { color: #b58900; }\n.solarized.solar-orange  { color: #cb4b16; }\n.solarized.solar-red { color: #dc322f; }\n.solarized.solar-magenta { color: #d33682; }\n.solarized.solar-violet  { color: #6c71c4; }\n.solarized.solar-blue { color: #268bd2; }\n.solarized.solar-cyan { color: #2aa198; }\n.solarized.solar-green { color: #859900; }\n\n/* Color scheme for code-mirror */\n\n.cm-s-solarized {\n  line-height: 1.45em;\n  color-profile: sRGB;\n  rendering-intent: auto;\n}\n.cm-s-solarized.cm-s-dark {\n  color: #839496;\n  background-color: #002b36;\n  text-shadow: #002b36 0 1px;\n}\n.cm-s-solarized.cm-s-light {\n  background-color: #fdf6e3;\n  color: #657b83;\n  text-shadow: #eee8d5 0 1px;\n}\n\n.cm-s-solarized .CodeMirror-widget {\n  text-shadow: none;\n}\n\n.cm-s-solarized .cm-header { color: #586e75; }\n.cm-s-solarized .cm-quote { color: #93a1a1; }\n\n.cm-s-solarized .cm-keyword { color: #cb4b16; }\n.cm-s-solarized .cm-atom { color: #d33682; }\n.cm-s-solarized .cm-number { color: #d33682; }\n.cm-s-solarized .cm-def { color: #2aa198; }\n\n.cm-s-solarized .cm-variable { color: #839496; }\n.cm-s-solarized .cm-variable-2 { color: #b58900; }\n.cm-s-solarized .cm-variable-3, .cm-s-solarized .cm-type { color: #6c71c4; }\n\n.cm-s-solarized .cm-property { color: #2aa198; }\n.cm-s-solarized .cm-operator { color: #6c71c4; }\n\n.cm-s-solarized .cm-comment { color: #586e75; font-style:italic; }\n\n.cm-s-solarized .cm-string { color: #859900; }\n.cm-s-solarized .cm-string-2 { color: #b58900; }\n\n.cm-s-solarized .cm-meta { color: #859900; }\n.cm-s-solarized .cm-qualifier { color: #b58900; }\n.cm-s-solarized .cm-builtin { color: #d33682; }\n.cm-s-solarized .cm-bracket { color: #cb4b16; }\n.cm-s-solarized .CodeMirror-matchingbracket { color: #859900; }\n.cm-s-solarized .CodeMirror-nonmatchingbracket { color: #dc322f; }\n.cm-s-solarized .cm-tag { color: #93a1a1; }\n.cm-s-solarized .cm-attribute { color: #2aa198; }\n.cm-s-solarized .cm-hr {\n  color: transparent;\n  border-top: 1px solid #586e75;\n  display: block;\n}\n.cm-s-solarized .cm-link { color: #93a1a1; cursor: pointer; }\n.cm-s-solarized .cm-special { color: #6c71c4; }\n.cm-s-solarized .cm-em {\n  color: #999;\n  text-decoration: underline;\n  text-decoration-style: dotted;\n}\n.cm-s-solarized .cm-error,\n.cm-s-solarized .cm-invalidchar {\n  color: #586e75;\n  border-bottom: 1px dotted #dc322f;\n}\n\n.cm-s-solarized.cm-s-dark div.CodeMirror-selected { background: #073642; }\n.cm-s-solarized.cm-s-dark.CodeMirror ::selection { background: rgba(7, 54, 66, 0.99); }\n.cm-s-solarized.cm-s-dark .CodeMirror-line::-moz-selection, .cm-s-dark .CodeMirror-line > span::-moz-selection, .cm-s-dark .CodeMirror-line > span > span::-moz-selection { background: rgba(7, 54, 66, 0.99); }\n\n.cm-s-solarized.cm-s-light div.CodeMirror-selected { background: #eee8d5; }\n.cm-s-solarized.cm-s-light .CodeMirror-line::selection, .cm-s-light .CodeMirror-line > span::selection, .cm-s-light .CodeMirror-line > span > span::selection { background: #eee8d5; }\n.cm-s-solarized.cm-s-light .CodeMirror-line::-moz-selection, .cm-s-ligh .CodeMirror-line > span::-moz-selection, .cm-s-ligh .CodeMirror-line > span > span::-moz-selection { background: #eee8d5; }\n\n/* Editor styling */\n\n\n\n/* Little shadow on the view-port of the buffer view */\n.cm-s-solarized.CodeMirror {\n  -moz-box-shadow: inset 7px 0 12px -6px #000;\n  -webkit-box-shadow: inset 7px 0 12px -6px #000;\n  box-shadow: inset 7px 0 12px -6px #000;\n}\n\n/* Remove gutter border */\n.cm-s-solarized .CodeMirror-gutters {\n  border-right: 0;\n}\n\n/* Gutter colors and line number styling based of color scheme (dark / light) */\n\n/* Dark */\n.cm-s-solarized.cm-s-dark .CodeMirror-gutters {\n  background-color: #073642;\n}\n\n.cm-s-solarized.cm-s-dark .CodeMirror-linenumber {\n  color: #586e75;\n  text-shadow: #021014 0 -1px;\n}\n\n/* Light */\n.cm-s-solarized.cm-s-light .CodeMirror-gutters {\n  background-color: #eee8d5;\n}\n\n.cm-s-solarized.cm-s-light .CodeMirror-linenumber {\n  color: #839496;\n}\n\n/* Common */\n.cm-s-solarized .CodeMirror-linenumber {\n  padding: 0 5px;\n}\n.cm-s-solarized .CodeMirror-guttermarker-subtle { color: #586e75; }\n.cm-s-solarized.cm-s-dark .CodeMirror-guttermarker { color: #ddd; }\n.cm-s-solarized.cm-s-light .CodeMirror-guttermarker { color: #cb4b16; }\n\n.cm-s-solarized .CodeMirror-gutter .CodeMirror-gutter-text {\n  color: #586e75;\n}\n\n/* Cursor */\n.cm-s-solarized .CodeMirror-cursor { border-left: 1px solid #819090; }\n\n/* Fat cursor */\n.cm-s-solarized.cm-s-light.cm-fat-cursor .CodeMirror-cursor { background: #77ee77; }\n.cm-s-solarized.cm-s-light .cm-animate-fat-cursor { background-color: #77ee77; }\n.cm-s-solarized.cm-s-dark.cm-fat-cursor .CodeMirror-cursor { background: #586e75; }\n.cm-s-solarized.cm-s-dark .cm-animate-fat-cursor { background-color: #586e75; }\n\n/* Active line */\n.cm-s-solarized.cm-s-dark .CodeMirror-activeline-background {\n  background: rgba(255, 255, 255, 0.06);\n}\n.cm-s-solarized.cm-s-light .CodeMirror-activeline-background {\n  background: rgba(0, 0, 0, 0.06);\n}\n", ""]);
 
 // exports
 
@@ -16149,7 +16850,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "\n.tinker {\n  height: 100vh;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: column;\n      flex-direction: column;\n}\n.tinker__status {\n  background-color: #f8fafc;\n  border-bottom: 1px solid #e2e8f0;\n  padding: .5rem 1rem;\n  font-size: .875rem;\n  color: #4a5568;\n}\n.tinker__status-text {\n  display: inline-block;\n  margin-left: .5rem;\n}\n.split-view {\n  -webkit-box-flex: 1;\n  -ms-flex: 1;\n      flex: 1;\n  display: grid;\n  height: calc(100vh - 2rem);\n}\n.input,\n.output {\n  overflow: auto;\n  height: 100%;\n}\n.input {\n  position: relative;\n}\n.output {\n  padding: 1rem;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: .875rem;\n  line-height: 1.5;\n  white-space: pre-wrap;\n  background-color: #1a202c;\n  color: #e2e8f0;\n}\n.gutter {\n  background-color: #e2e8f0;\n  background-repeat: no-repeat;\n  background-position: 50%;\n}\n.gutter:hover {\n  background-color: #cbd5e0;\n}\n.gutter.gutter-horizontal {\n  cursor: col-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');\n}\n.gutter.gutter-vertical {\n  cursor: row-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');\n}\n.text-dimmed {\n  color: #a0aec0;\n}\n.error {\n  color: #f56565;\n}\n", ""]);
+exports.push([module.i, "\n.tinker {\n  height: 100vh;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n  -ms-flex-direction: column;\n      flex-direction: column;\n}\n.tinker__status {\n  background-color: #f8fafc;\n  border-bottom: 1px solid #e2e8f0;\n  padding: .5rem 1rem;\n  font-size: .875rem;\n  color: #4a5568;\n}\n.tinker__status-text {\n  display: inline-block;\n  margin-left: .5rem;\n}\n.split-view {\n  -webkit-box-flex: 1;\n  -ms-flex: 1;\n      flex: 1;\n  display: grid;\n  height: calc(100vh - 2rem);\n}\n.input,\n.output {\n  overflow: auto;\n  height: 100%;\n}\n.input {\n  position: relative;\n}\n.output {\n  padding: 1rem;\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n  font-size: .875rem;\n  line-height: 1.5;\n  white-space: pre-wrap;\n  background-color: #282a36;\n  color: #f8f8f2;\n  overflow-y: auto;\n  border-left: 1px solid #44475a;\n}\n.output pre {\n  margin: 0;\n  padding: 0;\n  font-family: inherit;\n}\n.output .string {\n  color: #f1fa8c;\n}\n.output .number {\n  color: #bd93f9;\n}\n.output .boolean {\n  color: #ff79c6;\n}\n.output .null {\n  color: #6272a4;\n}\n.output .key {\n  color: #8be9fd;\n}\n.gutter {\n  background-color: #e2e8f0;\n  background-repeat: no-repeat;\n  background-position: 50%;\n}\n.gutter:hover {\n  background-color: #cbd5e0;\n}\n.gutter.gutter-horizontal {\n  cursor: col-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');\n}\n.gutter.gutter-vertical {\n  cursor: row-resize;\n  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');\n}\n.text-dimmed {\n  color: #a0aec0;\n}\n.error {\n  color: #f56565;\n}\n", ""]);
 
 // exports
 

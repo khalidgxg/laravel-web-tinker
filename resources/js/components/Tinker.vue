@@ -143,8 +143,36 @@ export default {
     font-size: 0.875rem;
     line-height: 1.5;
     white-space: pre-wrap;
-    background-color: #1a202c;
-    color: #e2e8f0;
+    background-color: #282a36;
+    color: #f8f8f2;
+    overflow-y: auto;
+    border-left: 1px solid #44475a;
+}
+
+.output pre {
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+}
+
+.output .string {
+    color: #f1fa8c;
+}
+
+.output .number {
+    color: #bd93f9;
+}
+
+.output .boolean {
+    color: #ff79c6;
+}
+
+.output .null {
+    color: #6272a4;
+}
+
+.output .key {
+    color: #8be9fd;
 }
 
 .gutter {
