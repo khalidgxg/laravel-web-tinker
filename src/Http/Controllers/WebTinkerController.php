@@ -5,14 +5,15 @@ namespace Spatie\WebTinker\Http\Controllers;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Spatie\WebTinker\Tinker;
 
 class WebTinkerController
 {
     public function index()
     {
-        return view('web-tinker::web-tinker', [
-            'path' => app(UrlGenerator::class)->to(config('web-tinker.path')),
+        return view('web-tinker-custom::web-tinker', [
+            'path' => app(UrlGenerator::class)->to(config('web-tinker-custom.path', config('web-tinker.path'))),
         ]);
     }
 
@@ -138,7 +139,7 @@ class WebTinkerController
             }
         } catch (\Exception $e) {
             // Log error but continue with default classes
-            \Log::error('Error scanning for classes: ' . $e->getMessage());
+            Log::error('Error scanning for classes: ' . $e->getMessage());
         }
 
         return response()->json([

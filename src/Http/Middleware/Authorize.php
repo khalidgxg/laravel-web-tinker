@@ -15,10 +15,10 @@ class Authorize
 
     protected function allowedToUseTinker(): bool
     {
-        if (! config('web-tinker.enabled')) {
+        if (! config('web-tinker-custom.enabled', config('web-tinker.enabled'))) {
             return false;
         }
 
-        return Gate::check('viewWebTinker');
+        return Gate::check('viewWebTinkerCustom');
     }
 }
