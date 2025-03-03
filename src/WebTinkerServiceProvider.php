@@ -18,23 +18,23 @@ class WebTinkerServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/web-tinker.php' => config_path('web-tinker-custom.php'),
+                __DIR__.'/../config/custom-web-tinker.php' => config_path('custom-custom-web-tinker.php'),
             ], 'config-custom-tinker');
 
             $this->publishes([
-                __DIR__.'/../resources/views' => base_path('resources/views/vendor/web-tinker-custom'),
+                __DIR__.'/../resources/views' => base_path('resources/views/vendor/custom-custom-web-tinker'),
             ], 'views-custom-tinker');
 
             $this->publishes([
-                __DIR__.'/../public' => public_path('vendor/web-tinker-custom'),
-            ], 'web-tinker-custom-assets');
+                __DIR__.'/../public' => public_path('vendor/custom-custom-web-tinker'),
+            ], 'custom-custom-web-tinker-assets');
         }
 
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'web-tinker-custom');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'custom-custom-web-tinker');
 
-        $this->app->bind(OutputModifier::class, config('web-tinker-custom.output_modifier', config('web-tinker.output_modifier')));
+        $this->app->bind(OutputModifier::class, config('custom-custom-web-tinker.output_modifier', config('custom-web-tinker.output_modifier')));
 
-        Route::middlewareGroup('web-tinker-custom', config('web-tinker-custom.middleware', config('web-tinker.middleware', [])));
+        Route::middlewareGroup('custom-custom-web-tinker', config('custom-custom-web-tinker.middleware', config('custom-web-tinker.middleware', [])));
 
         $this
             ->registerRoutes()
@@ -43,7 +43,7 @@ class WebTinkerServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/web-tinker.php', 'web-tinker-custom');
+        $this->mergeConfigFrom(__DIR__.'/../config/custom-web-tinker.php', 'custom-custom-web-tinker');
 
         $this->commands(InstallCommand::class);
     }
@@ -51,15 +51,15 @@ class WebTinkerServiceProvider extends ServiceProvider
     protected function routeConfiguration()
     {
         return [
-            'prefix' => config('web-tinker-custom.path', config('web-tinker.path')),
-            'middleware' => 'web-tinker-custom'
+            'prefix' => config('custom-custom-web-tinker.path', config('custom-web-tinker.path')),
+            'middleware' => 'custom-custom-web-tinker'
         ];
     }
 
     protected function registerRoutes()
     {
-        Route::domain(config('web-tinker-custom.domain', config('web-tinker.domain', '')))->group(function () {
-            Route::prefix(config('web-tinker-custom.path', config('web-tinker.path', 'tinker-custom')))->group(function () {
+        Route::domain(config('custom-custom-web-tinker.domain', config('custom-web-tinker.domain', '')))->group(function () {
+            Route::prefix(config('custom-custom-web-tinker.path', config('custom-web-tinker.path', 'tinker-custom')))->group(function () {
                 Route::get('/', 'Spatie\\WebTinker\\Http\\Controllers\\WebTinkerController@index');
                 Route::post('/', 'Spatie\\WebTinker\\Http\\Controllers\\WebTinkerController@execute');
                 Route::get('/classes', 'Spatie\\WebTinker\\Http\\Controllers\\WebTinkerController@getAvailableClasses');

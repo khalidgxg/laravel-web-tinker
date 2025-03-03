@@ -1,22 +1,22 @@
 # Artisan Tinker in your browser
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/laravel-web-tinker.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-web-tinker)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/spatie/laravel-web-tinker/run-tests?label=tests)
-[![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-web-tinker.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-web-tinker)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/laravel-custom-web-tinker.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-custom-web-tinker)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/spatie/laravel-custom-web-tinker/run-tests?label=tests)
+[![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-custom-web-tinker.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-custom-web-tinker)
 
 Artisan's tinker command is a great way to tinker with your application in the terminal. Unfortunately running a few lines of code, making edits, and copy/pasting code can be bothersome. Wouldn't it be great to tinker in the browser?
 
 This package will add a route to your application where you can tinker to your heart's content.
 
-![Web tinker light](https://spatie.github.io/laravel-web-tinker/light.png)
+![Web tinker light](https://spatie.github.io/laravel-custom-web-tinker/light.png)
 
 In case light hurts your eyes, there's a dark mode too.
 
-![Web tinker dark](https://spatie.github.io/laravel-web-tinker/dark.png)
+![Web tinker dark](https://spatie.github.io/laravel-custom-web-tinker/dark.png)
 
 ## Support us
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-web-tinker.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-web-tinker)
+[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-custom-web-tinker.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-custom-web-tinker)
 
 We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
 
@@ -31,13 +31,13 @@ This package can run arbitrary code. Unless you know what you are doing, you sho
 You can install the package via composer:
 
 ```bash
-composer require spatie/laravel-web-tinker --dev
+composer require spatie/laravel-custom-web-tinker --dev
 ```
 
 Next, you must publish the assets from this package by running this command.
 
 ```bash
-php artisan web-tinker:install
+php artisan custom-web-tinker:install
 ```
 
 Optionally, you can publish the config file of the package.
@@ -46,7 +46,7 @@ Optionally, you can publish the config file of the package.
 php artisan vendor:publish --provider="Spatie\WebTinker\WebTinkerServiceProvider" --tag="config"
 ```
 
-This is the content that will be published to `config/web-tinker.php`
+This is the content that will be published to `config/custom-web-tinker.php`
 
 ```php
 return [
@@ -115,11 +115,11 @@ public function boot()
 }
 ```
 
-2. You must set the `enabled` variable in the `web-tinker` config file to `true`.
+2. You must set the `enabled` variable in the `custom-web-tinker` config file to `true`.
 
 ## Modifying the output
 
-You can modify the output of tinker by specifying an output modifier in the `output_modifier` key of the `web-tinker` config file. An output modifier is any class that implements `\Spatie\WebTinker\OutputModifiers\OutputModifier`.
+You can modify the output of tinker by specifying an output modifier in the `output_modifier` key of the `custom-web-tinker` config file. An output modifier is any class that implements `\Spatie\WebTinker\OutputModifiers\OutputModifier`.
 
 This is how that interface looks like.
 

@@ -15,7 +15,7 @@ class Authorize
 
     protected function allowedToUseTinker(): bool
     {
-        if (! config('web-tinker-custom.enabled', config('web-tinker.enabled'))) {
+        if (! config('custom-custom-web-tinker.enabled', config('custom-web-tinker.enabled'))) {
             return false;
         }
 

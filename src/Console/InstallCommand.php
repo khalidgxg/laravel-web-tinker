@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'web-tinker-custom:install';
+    protected $signature = 'custom-custom-web-tinker:install';
 
     protected $description = 'Install all of the Web Tinker Custom resources';
 
@@ -14,7 +14,7 @@ class InstallCommand extends Command
     {
         $this->comment('Publishing Web Tinker Custom Assets...');
 
-        $this->callSilent('vendor:publish', ['--tag' => 'web-tinker-custom-assets']);
+        $this->callSilent('vendor:publish', ['--tag' => 'custom-custom-web-tinker-assets']);
 
         $this->info('Web tinker custom version installed successfully.');
     }

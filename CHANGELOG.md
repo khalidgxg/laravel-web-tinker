@@ -1,82 +1,82 @@
 # Changelog
 
-All notable changes to `laravel-web-tinker` will be documented in this file
+All notable changes to `laravel-custom-web-tinker` will be documented in this file
 
 ## 1.10.1 - 2025-02-17
 
 ### What's Changed
 
-* Laravel 12.x Compatibility by @laravel-shift in https://github.com/spatie/laravel-web-tinker/pull/111
+* Laravel 12.x Compatibility by @laravel-shift in https://github.com/spatie/laravel-custom-web-tinker/pull/111
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.10.0...1.10.1
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.10.0...1.10.1
 
 ## 1.10.0 - 2025-01-06
 
 ### What's Changed
 
-* Clientside output purifying by @xHeaven in https://github.com/spatie/laravel-web-tinker/pull/110
+* Clientside output purifying by @xHeaven in https://github.com/spatie/laravel-custom-web-tinker/pull/110
 
 ### New Contributors
 
-* @xHeaven made their first contribution in https://github.com/spatie/laravel-web-tinker/pull/110
+* @xHeaven made their first contribution in https://github.com/spatie/laravel-custom-web-tinker/pull/110
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.9.1...1.10.0
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.9.1...1.10.0
 
 ## 1.9.1 - 2024-12-23
 
 ### What's Changed
 
-* Prevent HTML injection by @AuditeMarlow in https://github.com/spatie/laravel-web-tinker/pull/107
+* Prevent HTML injection by @AuditeMarlow in https://github.com/spatie/laravel-custom-web-tinker/pull/107
 
 ### New Contributors
 
-* @AuditeMarlow made their first contribution in https://github.com/spatie/laravel-web-tinker/pull/107
+* @AuditeMarlow made their first contribution in https://github.com/spatie/laravel-custom-web-tinker/pull/107
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.9.0...1.9.1
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.9.0...1.9.1
 
 ## 1.9.0 - 2024-03-02
 
 ### What's Changed
 
-* Laravel 11.x Compatibility by @laravel-shift in https://github.com/spatie/laravel-web-tinker/pull/102
+* Laravel 11.x Compatibility by @laravel-shift in https://github.com/spatie/laravel-custom-web-tinker/pull/102
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.8.4...1.9.0
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.8.4...1.9.0
 
 ## 1.8.4 - 2023-03-01
 
 ### What's Changed
 
-- Clean '<whisper> - </whisper>' and 'INFO Ctrl+D' from the output by @geradrum in https://github.com/spatie/laravel-web-tinker/pull/99
+- Clean '<whisper> - </whisper>' and 'INFO Ctrl+D' from the output by @geradrum in https://github.com/spatie/laravel-custom-web-tinker/pull/99
 
 ### New Contributors
 
-- @geradrum made their first contribution in https://github.com/spatie/laravel-web-tinker/pull/99
+- @geradrum made their first contribution in https://github.com/spatie/laravel-custom-web-tinker/pull/99
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.8.3...1.8.4
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.8.3...1.8.4
 
 ## 1.8.3 - 2023-02-21
 
 ### What's Changed
 
-- Pass through tinker alias config by @tymondesigns in https://github.com/spatie/laravel-web-tinker/pull/97
+- Pass through tinker alias config by @tymondesigns in https://github.com/spatie/laravel-custom-web-tinker/pull/97
 
 ### New Contributors
 
-- @tymondesigns made their first contribution in https://github.com/spatie/laravel-web-tinker/pull/97
+- @tymondesigns made their first contribution in https://github.com/spatie/laravel-custom-web-tinker/pull/97
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.8.2...1.8.3
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.8.2...1.8.3
 
 ## 1.8.2 - 2023-02-01
 
 ### What's Changed
 
-- Laravel 10.x Compatibility by @laravel-shift in https://github.com/spatie/laravel-web-tinker/pull/96
+- Laravel 10.x Compatibility by @laravel-shift in https://github.com/spatie/laravel-custom-web-tinker/pull/96
 
 ### New Contributors
 
-- @laravel-shift made their first contribution in https://github.com/spatie/laravel-web-tinker/pull/96
+- @laravel-shift made their first contribution in https://github.com/spatie/laravel-custom-web-tinker/pull/96
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.8.1...1.8.2
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.8.1...1.8.2
 
 ## 1.8.1 - 2022-01-14
 
@@ -86,14 +86,14 @@ All notable changes to `laravel-web-tinker` will be documented in this file
 
 ## What's Changed
 
-- Bump axios from 0.18.1 to 0.21.1 by @dependabot in https://github.com/spatie/laravel-web-tinker/pull/73
-- Allow for middleware customization by @emiliopedrollo in https://github.com/spatie/laravel-web-tinker/pull/87
+- Bump axios from 0.18.1 to 0.21.1 by @dependabot in https://github.com/spatie/laravel-custom-web-tinker/pull/73
+- Allow for middleware customization by @emiliopedrollo in https://github.com/spatie/laravel-custom-web-tinker/pull/87
 
 ## New Contributors
 
-- @emiliopedrollo made their first contribution in https://github.com/spatie/laravel-web-tinker/pull/87
+- @emiliopedrollo made their first contribution in https://github.com/spatie/laravel-custom-web-tinker/pull/87
 
-**Full Changelog**: https://github.com/spatie/laravel-web-tinker/compare/1.7.7...1.8.0
+**Full Changelog**: https://github.com/spatie/laravel-custom-web-tinker/compare/1.7.7...1.8.0
 
 ## 1.7.7 - 2021-01-04
 

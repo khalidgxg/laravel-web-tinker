@@ -51,7 +51,7 @@ class Tinker
     {
         $config = new Configuration([
             'updateCheck' => 'never',
-            'configFile' => config('web-tinker.config_file') !== null ? base_path().'/'.config('web-tinker.config_file') : null,
+            'configFile' => config('custom-web-tinker.config_file') !== null ? base_path().'/'.config('custom-web-tinker.config_file') : null,
         ]);
 
         $config->setHistoryFile(defined('PHP_WINDOWS_VERSION_BUILD') ? 'null' : '/dev/null');

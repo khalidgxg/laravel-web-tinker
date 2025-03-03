@@ -15,7 +15,7 @@ class AuthorizeTest extends TestCase
 
         $this->actingAs(new User());
 
-        config()->set('web-tinker.enabled', true);
+        config()->set('custom-web-tinker.enabled', true);
 
         app()->detectEnvironment(function () {
             return 'local';
@@ -49,7 +49,7 @@ class AuthorizeTest extends TestCase
             return true;
         });
 
-        config()->set('web-tinker.enabled', false);
+        config()->set('custom-web-tinker.enabled', false);
 
         $this->get('/test')->assertStatus(403);
     }

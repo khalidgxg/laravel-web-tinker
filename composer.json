@@ -1,16 +1,16 @@
 {
-    "name": "khalidgxg/laravel-web-tinker",
+    "name": "khalidgxg/laravel-custom-web-tinker",
     "description": "Artisan Tinker in your browser with autocomplete support",
     "keywords": [
         "khalidgxg",
-        "web-tinker",
+        "custom-web-tinker",
         "laravel",
         "tinker",
         "debug",
         "development",
         "autocomplete"
     ],
-    "homepage": "https://github.com/khalidgxg/laravel-web-tinker",
+    "homepage": "https://github.com/khalidgxg/laravel-custom-web-tinker",
     "license": "MIT",
     "authors": [
         {

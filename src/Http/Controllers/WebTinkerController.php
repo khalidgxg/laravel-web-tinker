@@ -12,8 +12,8 @@ class WebTinkerController
 {
     public function index()
     {
-        return view('web-tinker-custom::web-tinker', [
-            'path' => app(UrlGenerator::class)->to(config('web-tinker-custom.path', config('web-tinker.path'))),
+        return view('custom-custom-web-tinker::custom-web-tinker', [
+            'path' => app(UrlGenerator::class)->to(config('custom-custom-web-tinker.path', config('custom-web-tinker.path'))),
         ]);
     }
 
